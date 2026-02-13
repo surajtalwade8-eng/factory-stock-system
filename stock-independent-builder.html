@@ -763,7 +763,7 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
     });
   </script>
 
-  <!-- Firebase Real-Time Sync with Delayed Hooking -->
+  <!-- Firebase with Independent Table Builder -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, doc, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -787,97 +787,97 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
 
     console.log("🔥 Firebase initialized");
 
-    // Wait for page load then hook functions
-    window.addEventListener('load', function() {
-      setTimeout(hookFunctions, 500);
-    });
+    // INDEPENDENT TABLE BUILDER - Bypass existing functions
+    function rebuildTableDirectly(data) {
+      console.log("🔨 Building table directly with", data.length, "items");
 
-    function hookFunctions() {
-      console.log("🔌 Attempting to hook functions...");
-
-      // Hook updateStock
-      if (typeof window.updateStock === "function") {
-        const originalUpdateStock = window.updateStock;
-        window.updateStock = function(itemCode, type) {
-          console.log("📝 updateStock called:", itemCode, type);
-
-          // Call original
-          originalUpdateStock(itemCode, type);
-
-          // Force UI update after small delay
-          setTimeout(() => {
-            console.log("🔄 Triggering UI refresh after updateStock");
-            refreshUI();
-
-            // Save to cloud
-            if (window.isAdminUser && window.isAdminUser()) {
-              window.saveStockToCloud();
-            }
-          }, 200);
-        };
-        console.log("✅ updateStock hooked successfully");
-      } else {
-        console.warn("⚠️ updateStock not found");
-      }
-
-      // Hook editReady
-      if (typeof window.editReady === "function") {
-        const originalEditReady = window.editReady;
-        window.editReady = function(itemCode) {
-          console.log("📝 editReady called:", itemCode);
-
-          originalEditReady(itemCode);
-
-          setTimeout(() => {
-            console.log("🔄 Triggering UI refresh after editReady");
-            refreshUI();
-
-            if (window.isAdminUser && window.isAdminUser()) {
-              window.saveStockToCloud();
-            }
-          }, 200);
-        };
-        console.log("✅ editReady hooked successfully");
-      } else {
-        console.warn("⚠️ editReady not found");
-      }
-
-      // Hook importData
-      if (typeof window.importData === "function") {
-        const originalImportData = window.importData;
-        window.importData = function() {
-          console.log("📝 importData called");
-
-          originalImportData();
-
-          setTimeout(() => {
-            console.log("🔄 Triggering UI refresh after import");
-            refreshUI();
-
-            if (window.isAdminUser && window.isAdminUser()) {
-              window.saveStockToCloud();
-            }
-          }, 500);
-        };
-        console.log("✅ importData hooked successfully");
-      } else {
-        console.warn("⚠️ importData not found");
-      }
-    }
-
-    // Refresh UI function
-    function refreshUI() {
-      console.log("🔨 Refreshing UI...");
-
-      if (!window.stockData || !Array.isArray(window.stockData)) {
-        console.warn("⚠️ stockData not available");
+      const tbody = document.getElementById("stockBody");
+      if (!tbody) {
+        console.error("❌ tbody not found");
         return;
       }
 
-      // Update stats
-      const total = window.stockData.length;
-      const low = window.stockData.filter(x => x.qty > 0 && x.qty <= 5).length;
-      const zero = window.stockData.filter(x => x.qty === 0).length;
+      // Get current search and filter
+      const searchInput = document.getElementById("searchInput");
+      const categoryFilter = document.getElementById("categoryFilter");
+
+      const searchTerm = searchInput ? searchInput.value.toLowerCase() : "";
+      const selectedCategory = categoryFilter ? categoryFilter.value : "";
+
+      // Filter data
+      let filteredData = data;
+
+      if (searchTerm) {
+        filteredData = filteredData.filter(item => 
+          (item.code && item.code.toLowerCase().includes(searchTerm)) ||
+          (item.desc && item.desc.toLowerCase().includes(searchTerm)) ||
+          (item.category && item.category.toLowerCase().includes(searchTerm))
+        );
+      }
+
+      if (selectedCategory && selectedCategory !== "") {
+        filteredData = filteredData.filter(item => 
+          item.category === selectedCategory
+        );
+      }
+
+      console.log("📋 Filtered to", filteredData.length, "items");
+
+      // Build table HTML
+      let html = "";
+
+      filteredData.forEach(item => {
+        const qty = item.qty || 0;
+        const qtyColor = qty === 0 ? "#f44336" : qty <= 5 ? "#ff9800" : "#4caf50";
+
+        let rowClass = "";
+        if (item.category && item.category.includes("Mono")) rowClass = "mono";
+        else if (item.category && item.category.includes("Multifunction")) rowClass = "multi";
+        else if (item.category && item.category.includes("Toner")) rowClass = "toner";
+        else if (item.category && item.category.includes("Drum")) rowClass = "drum";
+        else if (item.category && item.category.includes("PART")) rowClass = "parts";
+
+        if (qty === 0) rowClass += " zero-stock";
+        else if (qty <= 5 && qty > 0) rowClass += " low-stock";
+
+        const isAdmin = window.isAdminUser && window.isAdminUser();
+        const actionButtons = isAdmin ? 
+          `<button onclick="updateStock('${item.code}','IN')" class="btn" style="background:#4caf50;padding:8px 15px;font-size:12px;margin-right:5px">IN</button>
+           <button onclick="updateStock('${item.code}','OUT')" class="btn" style="background:#f44336;padding:8px 15px;font-size:12px;margin-right:5px">OUT</button>
+           <button onclick="editReady('${item.code}')" class="btn" style="background:#ff9800;padding:8px 15px;font-size:12px">Ready</button>` :
+          `<span style="color:#777;font-size:12px">View only</span>`;
+
+        html += `
+          <tr class="${rowClass}">
+            <td><strong>${item.category || ""}</strong></td>
+            <td><strong>${item.code || ""}</strong></td>
+            <td>${item.desc || item.code || ""}</td>
+            <td><strong style="font-size:1.2em;color:${qtyColor}">${qty}</strong></td>
+            <td>${item.status || ""}</td>
+            <td>${actionButtons}</td>
+          </tr>
+        `;
+      });
+
+      if (filteredData.length === 0) {
+        html = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#999">No items found</td></tr>';
+      }
+
+      tbody.innerHTML = html;
+      console.log("✅ Table rebuilt with", filteredData.length, "rows");
+
+      // Hide/show no results message
+      const noResults = document.getElementById("noResults");
+      if (noResults) {
+        noResults.style.display = filteredData.length === 0 ? "block" : "none";
+      }
+    }
+
+    // INDEPENDENT STATS UPDATER
+    function updateStatsDirectly(data) {
+      const total = data.length;
+      const low = data.filter(x => x.qty > 0 && x.qty <= 5).length;
+      const zero = data.filter(x => x.qty === 0).length;
 
       const totalEl = document.getElementById("totalItems");
       const lowEl = document.getElementById("lowStock");
@@ -887,27 +887,94 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
       if (lowEl) lowEl.textContent = low;
       if (zeroEl) zeroEl.textContent = zero;
 
-      console.log("📊 Stats updated: Total=" + total + " Low=" + low + " Zero=" + zero);
-
-      // Try to call existing functions
-      if (typeof window.displayStock === "function") {
-        try {
-          window.displayStock(window.stockData);
-          console.log("✅ displayStock() called");
-        } catch(e) {
-          console.error("❌ displayStock error:", e);
-        }
-      }
-
-      if (typeof window.filterStock === "function") {
-        try {
-          window.filterStock();
-          console.log("✅ filterStock() called");
-        } catch(e) {
-          console.error("❌ filterStock error:", e);
-        }
-      }
+      console.log("📊 Stats: Total=" + total + " Low=" + low + " Zero=" + zero);
     }
+
+    // Complete UI refresh
+    function refreshUIComplete() {
+      if (!window.stockData || !Array.isArray(window.stockData)) {
+        console.warn("⚠️ No stockData");
+        return;
+      }
+
+      console.log("🔄 Complete UI refresh starting...");
+
+      updateStatsDirectly(window.stockData);
+      rebuildTableDirectly(window.stockData);
+
+      console.log("✅ UI refresh complete");
+    }
+
+    // Hook functions after page load
+    window.addEventListener('load', function() {
+      setTimeout(() => {
+        console.log("🔌 Hooking functions...");
+
+        if (typeof window.updateStock === "function") {
+          const orig = window.updateStock;
+          window.updateStock = function(code, type) {
+            console.log("📝 updateStock:", code, type);
+            orig(code, type);
+
+            setTimeout(() => {
+              refreshUIComplete();
+              if (window.isAdminUser && window.isAdminUser()) {
+                window.saveStockToCloud();
+              }
+            }, 200);
+          };
+          console.log("✅ updateStock hooked");
+        }
+
+        if (typeof window.editReady === "function") {
+          const orig = window.editReady;
+          window.editReady = function(code) {
+            console.log("📝 editReady:", code);
+            orig(code);
+
+            setTimeout(() => {
+              refreshUIComplete();
+              if (window.isAdminUser && window.isAdminUser()) {
+                window.saveStockToCloud();
+              }
+            }, 200);
+          };
+          console.log("✅ editReady hooked");
+        }
+
+        if (typeof window.importData === "function") {
+          const orig = window.importData;
+          window.importData = function() {
+            console.log("📝 importData");
+            orig();
+
+            setTimeout(() => {
+              refreshUIComplete();
+              if (window.isAdminUser && window.isAdminUser()) {
+                window.saveStockToCloud();
+              }
+            }, 500);
+          };
+          console.log("✅ importData hooked");
+        }
+
+        // Hook search and filter
+        const searchInput = document.getElementById("searchInput");
+        if (searchInput) {
+          searchInput.addEventListener("input", () => {
+            rebuildTableDirectly(window.stockData);
+          });
+        }
+
+        const catFilter = document.getElementById("categoryFilter");
+        if (catFilter) {
+          catFilter.addEventListener("change", () => {
+            rebuildTableDirectly(window.stockData);
+          });
+        }
+
+      }, 500);
+    });
 
     // Real-time listener
     onSnapshot(stockRef, { includeMetadataChanges: true }, (snapshot) => {
@@ -915,8 +982,7 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
         return;
       }
 
-      const source = snapshot.metadata.hasPendingWrites ? "Local" : "Server";
-      console.log("🔄 Snapshot from:", source);
+      console.log("🔄 Snapshot from Firebase");
 
       const data = snapshot.data();
       if (data && Array.isArray(data.items)) {
@@ -931,9 +997,9 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
           localStorage.setItem("stockData", JSON.stringify(window.stockData));
         } catch(e) {}
 
-        // Refresh UI
+        // Complete UI refresh
         setTimeout(() => {
-          refreshUI();
+          refreshUIComplete();
         }, 100);
 
         showSync("✓ Synced (" + data.items.length + ")", "ok");
@@ -941,26 +1007,21 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
         setTimeout(() => { isSyncing = false; }, 300);
       }
     }, (err) => {
-      console.error("❌ Snapshot error:", err);
+      console.error("❌ Error:", err);
       showSync("✗ Error", "bad");
     });
 
-    // Save to cloud
+    // Save function
     window.saveStockToCloud = async function() {
-      if (localStorage.getItem("stock_user_role") !== "admin") {
-        return;
-      }
-      if (isSyncing) {
-        console.log("⏳ Already syncing, skip");
-        return;
-      }
+      if (localStorage.getItem("stock_user_role") !== "admin") return;
+      if (isSyncing) return;
 
       if (saveTimeout) clearTimeout(saveTimeout);
 
       saveTimeout = setTimeout(async () => {
         try {
           showSync("⟳ Saving...", "info");
-          console.log("💾 Saving", window.stockData.length, "items");
+          console.log("💾 Saving...");
 
           await setDoc(stockRef, {
             items: window.stockData,
@@ -969,7 +1030,7 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
           }, { merge: true });
 
           showSync("✓ Saved", "ok");
-          console.log("✅ Saved successfully");
+          console.log("✅ Saved");
         } catch (e) {
           console.error("❌ Save error:", e);
           showSync("✗ Failed", "bad");
@@ -1003,8 +1064,7 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
       }, 2000);
     }
 
-    console.log("🔥 Firebase Real-Time Sync Ready!");
-    console.log("⏳ Functions will be hooked after page load...");
+    console.log("🔥 Firebase with Independent Builder Ready!");
   </script>
 
 </body>
