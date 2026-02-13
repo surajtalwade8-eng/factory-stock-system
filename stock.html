@@ -763,52 +763,147 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
     });
   </script>
 
-  <!-- TEST: Immediate Save Patch -->
+  <!-- COMPLETELY REPLACE updateStock & editReady -->
   <script>
     window.addEventListener('DOMContentLoaded', function() {
       setTimeout(() => {
-        console.log("%c🧪 TEST VERSION - IMMEDIATE SAVE", "background:#ff9800;color:white;padding:5px;font-size:16px");
+        console.log("%c🔧 REPLACING BROKEN FUNCTIONS WITH NEW ONES", "background:#9c27b0;color:white;padding:5px;font-size:16px");
 
-        const origUpdateStock = window.updateStock;
+        // COMPLETELY NEW updateStock function
+        window.updateStock = function(itemCode, type) {
+          console.log("%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "color:#f44336");
+          console.log("%c🔴 UPDATE STOCK: " + itemCode + " " + type, "background:#f44336;color:white;padding:8px;font-size:16px");
+          console.log("%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "color:#f44336");
 
-        if (origUpdateStock) {
-          window.updateStock = function(itemCode, type) {
-            console.log("%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "color:#f44336");
-            console.log("%c🔴 IN/OUT BUTTON CLICKED!", "background:#f44336;color:white;padding:8px;font-size:16px");
-            console.log("%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "color:#f44336");
-            console.log("📦 Item:", itemCode);
-            console.log("📦 Action:", type);
+          // Find the item
+          const item = window.stockData.find(i => i.code === itemCode);
 
-            const item = window.stockData.find(i => i.code === itemCode);
-            console.log("📊 Item BEFORE:", item ? JSON.stringify(item) : "NOT FOUND");
+          if (!item) {
+            console.log("%c❌ Item not found!", "background:#f44336;color:white;padding:3px");
+            alert("Error: Item " + itemCode + " not found!");
+            return;
+          }
 
-            origUpdateStock(itemCode, type);
+          console.log("📦 Item found:", item.code);
+          console.log("📊 Current qty:", item.qty);
 
-            const itemAfter = window.stockData.find(i => i.code === itemCode);
-            console.log("📊 Item AFTER:", itemAfter ? JSON.stringify(itemAfter) : "NOT FOUND");
+          // Ask for quantity
+          const qtyInput = prompt("Enter " + type + " quantity for " + itemCode + ":");
 
-            if (typeof window.displayStock === 'function') {
-              window.displayStock(window.stockData);
-              console.log("✅ Display updated");
+          if (!qtyInput) {
+            console.log("⏭️ User cancelled");
+            return;
+          }
+
+          const qty = parseInt(qtyInput);
+
+          if (isNaN(qty) || qty <= 0) {
+            console.log("%c❌ Invalid quantity!", "background:#f44336;color:white;padding:3px");
+            alert("Error: Please enter a valid positive number!");
+            return;
+          }
+
+          console.log("📝 User entered:", qty);
+
+          // Calculate new quantity
+          const oldQty = item.qty || 0;
+          let newQty;
+
+          if (type === 'IN') {
+            newQty = oldQty + qty;
+            console.log("➕ IN operation:", oldQty, "+", qty, "=", newQty);
+          } else if (type === 'OUT') {
+            newQty = oldQty - qty;
+            if (newQty < 0) {
+              newQty = 0;
+              console.log("⚠️ Qty would be negative, setting to 0");
             }
+            console.log("➖ OUT operation:", oldQty, "-", qty, "=", newQty);
+          }
 
-            // IMMEDIATE SAVE - NO TIMEOUT!
-            if (window.saveStockToCloudNow) {
-              console.log("%c🚀 CALLING IMMEDIATE SAVE...", "background:#ff9800;color:white;padding:5px");
-              window.saveStockToCloudNow();
-            } else {
-              console.log("%c❌ saveStockToCloudNow NOT FOUND!", "background:#f44336;color:white;padding:5px");
-            }
-          };
-          console.log("✅ updateStock patched with IMMEDIATE save");
-        } else {
-          console.log("%c❌ updateStock NOT FOUND!", "background:#f44336;color:white;padding:5px");
-        }
+          // UPDATE THE QTY
+          console.log("%c🔄 UPDATING QTY: " + oldQty + " → " + newQty, "background:#ff9800;color:white;padding:5px");
+          item.qty = newQty;
+
+          // Verify update
+          const verifyItem = window.stockData.find(i => i.code === itemCode);
+          console.log("✅ Verification - New qty:", verifyItem.qty);
+
+          if (verifyItem.qty !== newQty) {
+            console.log("%c❌ UPDATE FAILED!", "background:#f44336;color:white;padding:5px");
+            alert("Error: Update failed!");
+            return;
+          }
+
+          console.log("%c✅ QTY UPDATED SUCCESSFULLY!", "background:#4caf50;color:white;padding:5px;font-size:14px");
+
+          // Save to localStorage
+          try {
+            localStorage.setItem('stockData', JSON.stringify(window.stockData));
+            console.log("✅ Saved to localStorage");
+          } catch(e) {
+            console.log("⚠️ localStorage save failed:", e.message);
+          }
+
+          // Update display
+          console.log("🖥️ Updating display...");
+          if (typeof window.displayStock === 'function') {
+            window.displayStock(window.stockData);
+            console.log("✅ Display updated");
+          }
+
+          // Save to Firebase
+          console.log("💾 Triggering Firebase save...");
+          if (window.saveStockToCloudNow) {
+            window.saveStockToCloudNow();
+          } else {
+            console.log("❌ Save function not found!");
+          }
+        };
+
+        console.log("%c✅ NEW updateStock INSTALLED!", "background:#4caf50;color:white;padding:5px;font-size:14px");
+
+        // NEW editReady function
+        window.editReady = function(itemCode) {
+          console.log("📝 Edit Ready:", itemCode);
+
+          const item = window.stockData.find(i => i.code === itemCode);
+          if (!item) {
+            alert("Item not found!");
+            return;
+          }
+
+          const newReady = prompt("Enter ready qty for " + itemCode + " (current: " + (item.qty || 0) + "):");
+
+          if (!newReady) return;
+
+          const ready = parseInt(newReady);
+          if (isNaN(ready) || ready < 0) {
+            alert("Invalid quantity!");
+            return;
+          }
+
+          item.status = ready + " READY";
+          console.log("✅ Status updated:", item.status);
+
+          localStorage.setItem('stockData', JSON.stringify(window.stockData));
+
+          if (typeof window.displayStock === 'function') {
+            window.displayStock(window.stockData);
+          }
+
+          if (window.saveStockToCloudNow) {
+            window.saveStockToCloudNow();
+          }
+        };
+
+        console.log("✅ NEW editReady INSTALLED!");
+
       }, 500);
     });
   </script>
 
-  <!-- Firebase with IMMEDIATE save -->
+  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, doc, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -837,13 +932,13 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
         return;
       }
 
-      console.log("%c📡 Firebase update received", "background:#2196f3;color:white;padding:5px");
+      console.log("%c📡 Firebase update", "background:#2196f3;color:white;padding:5px");
 
       const data = snapshot.data();
       if (data && Array.isArray(data.items)) {
         isSyncing = true;
         console.log("✅ Received:", data.items.length, "items");
-        if (data.by) console.log("👤 Changed by:", data.by);
+        if (data.by) console.log("👤 By:", data.by);
 
         window.stockData = data.items;
         window.currentData = window.stockData;
@@ -855,7 +950,7 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
         setTimeout(() => {
           if (typeof window.displayStock === 'function') {
             window.displayStock(window.stockData);
-            console.log("%c✅ Viewer display updated!", "background:#4caf50;color:white;padding:5px");
+            console.log("%c✅ Display updated!", "background:#4caf50;color:white;padding:3px");
           }
         }, 100);
 
@@ -864,38 +959,29 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
         setTimeout(() => { isSyncing = false; }, 300);
       }
     }, (err) => {
-      console.error("%c❌ Firebase error:", "background:#f44336;color:white;padding:5px", err);
+      console.error("%c❌ Firebase error", "background:#f44336;color:white;padding:5px", err);
       showSync("✗ Error", "bad");
     });
 
-    // IMMEDIATE save function - NO debounce
+    // Save function
     window.saveStockToCloudNow = async function() {
-      console.log("%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "color:#ff9800");
-      console.log("%c💾 IMMEDIATE SAVE TO FIREBASE", "background:#ff9800;color:white;padding:8px;font-size:16px");
-      console.log("%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "color:#ff9800");
+      console.log("%c💾 SAVE TO FIREBASE", "background:#ff9800;color:white;padding:5px;font-size:14px");
 
       const userRole = localStorage.getItem("stock_user_role");
       const userEmail = localStorage.getItem("stock_user_email");
 
-      console.log("👤 User:", userEmail);
-      console.log("👤 Role:", userRole);
-      console.log("📊 stockData exists?", !!window.stockData);
-      console.log("📊 stockData length:", window.stockData ? window.stockData.length : "N/A");
-
       if (userRole !== "admin") {
-        console.log("%c❌ NOT ADMIN - Cannot save", "background:#f44336;color:white;padding:5px");
-        alert("Error: Only admin can save!");
+        console.log("❌ Not admin");
         return;
       }
 
       if (isSyncing) {
-        console.log("%c⏭️ Syncing in progress - skipping", "background:#ff9800;color:white;padding:3px");
+        console.log("⏭️ Syncing - skipped");
         return;
       }
 
       if (!window.stockData || !Array.isArray(window.stockData)) {
-        console.log("%c❌ Invalid stockData", "background:#f44336;color:white;padding:5px");
-        alert("Error: Invalid data!");
+        console.log("❌ Invalid data");
         return;
       }
 
@@ -903,7 +989,6 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
         showSync("⟳ Saving...", "info");
         console.log("🚀 Writing to Firebase...");
         console.log("📦 Items:", window.stockData.length);
-        console.log("📦 Sample:", window.stockData[0]);
 
         await setDoc(stockRef, {
           items: window.stockData,
@@ -912,21 +997,14 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
         }, { merge: true });
 
         showSync("✓ Saved!", "ok");
-        console.log("%c✅✅✅ FIREBASE WRITE SUCCESS!", "background:#4caf50;color:white;padding:8px;font-size:16px");
-        console.log("👤 Saved by:", userEmail);
-        console.log("🌐 Viewers will receive update now!");
+        console.log("%c✅✅✅ SAVED!", "background:#4caf50;color:white;padding:5px;font-size:16px");
 
-        alert("✅ Saved successfully! Viewers will see the change.");
+        alert("✅ Changes saved! Viewers will see the update.");
 
       } catch (e) {
-        console.log("%c❌❌❌ FIREBASE WRITE FAILED!", "background:#f44336;color:white;padding:8px;font-size:16px");
-        console.error("Error name:", e.name);
-        console.error("Error message:", e.message);
-        console.error("Error code:", e.code);
-        console.error("Full error:", e);
-
+        console.error("%c❌ Save failed!", "background:#f44336;color:white;padding:5px", e);
         showSync("✗ Failed", "bad");
-        alert("❌ Save failed! Check console for details.");
+        alert("❌ Save failed: " + e.message);
       }
     };
 
@@ -957,7 +1035,6 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
     }
 
     console.log("%c🔥 Firebase ready!", "background:#4caf50;color:white;padding:5px");
-    console.log("%c🧪 TEST MODE: Immediate save + Alerts enabled", "background:#ff9800;color:black;padding:5px");
   </script>
 
 </body>
