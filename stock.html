@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -762,7 +763,7 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
     });
   </script>
 
-  <!-- Ultimate Firebase Real-Time Sync -->
+  <!-- Firebase Real-Time Sync with Delayed Hooking -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, doc, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -786,119 +787,171 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
 
     console.log("🔥 Firebase initialized");
 
-    // FORCED UI UPDATE FUNCTION
-    function forceUIUpdate() {
-      console.log("🔨 Forcing UI update...");
+    // Wait for page load then hook functions
+    window.addEventListener('load', function() {
+      setTimeout(hookFunctions, 500);
+    });
 
-      // 1. Update stats with DIRECT DOM manipulation
-      if (window.stockData && Array.isArray(window.stockData)) {
-        const total = window.stockData.length;
-        const low = window.stockData.filter(x => x.qty > 0 && x.qty <= 5).length;
-        const zero = window.stockData.filter(x => x.qty === 0).length;
+    function hookFunctions() {
+      console.log("🔌 Attempting to hook functions...");
 
-        const totalEl = document.getElementById("totalItems");
-        const lowEl = document.getElementById("lowStock");
-        const zeroEl = document.getElementById("zeroStock");
+      // Hook updateStock
+      if (typeof window.updateStock === "function") {
+        const originalUpdateStock = window.updateStock;
+        window.updateStock = function(itemCode, type) {
+          console.log("📝 updateStock called:", itemCode, type);
 
-        if (totalEl) {
-          totalEl.textContent = total;
-          console.log("📊 Total updated:", total);
-        }
-        if (lowEl) {
-          lowEl.textContent = low;
-          console.log("📊 Low updated:", low);
-        }
-        if (zeroEl) {
-          zeroEl.textContent = zero;
-          console.log("📊 Zero updated:", zero);
-        }
+          // Call original
+          originalUpdateStock(itemCode, type);
+
+          // Force UI update after small delay
+          setTimeout(() => {
+            console.log("🔄 Triggering UI refresh after updateStock");
+            refreshUI();
+
+            // Save to cloud
+            if (window.isAdminUser && window.isAdminUser()) {
+              window.saveStockToCloud();
+            }
+          }, 200);
+        };
+        console.log("✅ updateStock hooked successfully");
+      } else {
+        console.warn("⚠️ updateStock not found");
       }
 
-      // 2. Call rebuildCategoryOptions if exists
-      if (typeof window.rebuildCategoryOptions === "function") {
-        try {
-          window.rebuildCategoryOptions();
-          console.log("✅ Categories rebuilt");
-        } catch(e) {
-          console.error("❌ Category rebuild error:", e);
-        }
+      // Hook editReady
+      if (typeof window.editReady === "function") {
+        const originalEditReady = window.editReady;
+        window.editReady = function(itemCode) {
+          console.log("📝 editReady called:", itemCode);
+
+          originalEditReady(itemCode);
+
+          setTimeout(() => {
+            console.log("🔄 Triggering UI refresh after editReady");
+            refreshUI();
+
+            if (window.isAdminUser && window.isAdminUser()) {
+              window.saveStockToCloud();
+            }
+          }, 200);
+        };
+        console.log("✅ editReady hooked successfully");
+      } else {
+        console.warn("⚠️ editReady not found");
       }
 
-      // 3. Call filterStock to refresh table
-      if (typeof window.filterStock === "function") {
-        try {
-          window.filterStock();
-          console.log("✅ Table filtered/refreshed");
-        } catch(e) {
-          console.error("❌ FilterStock error:", e);
-        }
+      // Hook importData
+      if (typeof window.importData === "function") {
+        const originalImportData = window.importData;
+        window.importData = function() {
+          console.log("📝 importData called");
+
+          originalImportData();
+
+          setTimeout(() => {
+            console.log("🔄 Triggering UI refresh after import");
+            refreshUI();
+
+            if (window.isAdminUser && window.isAdminUser()) {
+              window.saveStockToCloud();
+            }
+          }, 500);
+        };
+        console.log("✅ importData hooked successfully");
+      } else {
+        console.warn("⚠️ importData not found");
+      }
+    }
+
+    // Refresh UI function
+    function refreshUI() {
+      console.log("🔨 Refreshing UI...");
+
+      if (!window.stockData || !Array.isArray(window.stockData)) {
+        console.warn("⚠️ stockData not available");
+        return;
       }
 
-      // 4. If filterStock doesn't work, call displayStock directly
+      // Update stats
+      const total = window.stockData.length;
+      const low = window.stockData.filter(x => x.qty > 0 && x.qty <= 5).length;
+      const zero = window.stockData.filter(x => x.qty === 0).length;
+
+      const totalEl = document.getElementById("totalItems");
+      const lowEl = document.getElementById("lowStock");
+      const zeroEl = document.getElementById("zeroStock");
+
+      if (totalEl) totalEl.textContent = total;
+      if (lowEl) lowEl.textContent = low;
+      if (zeroEl) zeroEl.textContent = zero;
+
+      console.log("📊 Stats updated: Total=" + total + " Low=" + low + " Zero=" + zero);
+
+      // Try to call existing functions
       if (typeof window.displayStock === "function") {
         try {
           window.displayStock(window.stockData);
-          console.log("✅ Table displayed directly");
+          console.log("✅ displayStock() called");
         } catch(e) {
-          console.error("❌ DisplayStock error:", e);
+          console.error("❌ displayStock error:", e);
         }
       }
 
-      console.log("✅ UI update complete");
+      if (typeof window.filterStock === "function") {
+        try {
+          window.filterStock();
+          console.log("✅ filterStock() called");
+        } catch(e) {
+          console.error("❌ filterStock error:", e);
+        }
+      }
     }
 
     // Real-time listener
     onSnapshot(stockRef, { includeMetadataChanges: true }, (snapshot) => {
       if (snapshot.metadata.fromCache && !snapshot.metadata.hasPendingWrites) {
-        console.log("📦 Cache only, skipping");
         return;
       }
 
       const source = snapshot.metadata.hasPendingWrites ? "Local" : "Server";
-      console.log("🔄 Update from:", source);
+      console.log("🔄 Snapshot from:", source);
 
       const data = snapshot.data();
       if (data && Array.isArray(data.items)) {
         isSyncing = true;
 
-        console.log("✅ Loaded:", data.items.length, "items");
+        console.log("✅ Received:", data.items.length, "items");
 
-        // Update global data
         window.stockData = data.items;
         window.currentData = window.stockData;
 
-        // Save to localStorage
         try {
           localStorage.setItem("stockData", JSON.stringify(window.stockData));
-          console.log("💾 Saved to localStorage");
-        } catch(e) {
-          console.error("❌ LocalStorage error:", e);
-        }
+        } catch(e) {}
 
-        // FORCE UI UPDATE
+        // Refresh UI
         setTimeout(() => {
-          forceUIUpdate();
+          refreshUI();
         }, 100);
 
         showSync("✓ Synced (" + data.items.length + ")", "ok");
 
-        setTimeout(() => { isSyncing = false; }, 500);
-      } else {
-        console.warn("⚠️ No items in data");
+        setTimeout(() => { isSyncing = false; }, 300);
       }
     }, (err) => {
-      console.error("❌ Sync error:", err);
+      console.error("❌ Snapshot error:", err);
       showSync("✗ Error", "bad");
     });
 
-    // Save function (admin only)
+    // Save to cloud
     window.saveStockToCloud = async function() {
       if (localStorage.getItem("stock_user_role") !== "admin") {
-        console.log("👁️ Viewer - no save");
         return;
       }
       if (isSyncing) {
-        console.log("⏳ Already syncing");
+        console.log("⏳ Already syncing, skip");
         return;
       }
 
@@ -907,7 +960,7 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
       saveTimeout = setTimeout(async () => {
         try {
           showSync("⟳ Saving...", "info");
-          console.log("💾 Saving to Firebase...");
+          console.log("💾 Saving", window.stockData.length, "items");
 
           await setDoc(stockRef, {
             items: window.stockData,
@@ -916,12 +969,12 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
           }, { merge: true });
 
           showSync("✓ Saved", "ok");
-          console.log("✅ Save complete");
+          console.log("✅ Saved successfully");
         } catch (e) {
           console.error("❌ Save error:", e);
           showSync("✗ Failed", "bad");
         }
-      }, 200);
+      }, 300);
     };
 
     function showSync(msg, type) {
@@ -950,66 +1003,8 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
       }, 2000);
     }
 
-    // Hook updateStock
-    const orig = window.updateStock;
-    if (orig) {
-      window.updateStock = function() {
-        const result = orig.apply(this, arguments);
-
-        // Force immediate UI update
-        setTimeout(() => {
-          forceUIUpdate();
-
-          // Then save to cloud
-          if (window.isAdminUser && window.isAdminUser()) {
-            window.saveStockToCloud();
-          }
-        }, 100);
-
-        return result;
-      };
-      console.log("✅ updateStock hooked");
-    }
-
-    // Hook editReady
-    const origReady = window.editReady;
-    if (origReady) {
-      window.editReady = function() {
-        const result = origReady.apply(this, arguments);
-
-        setTimeout(() => {
-          forceUIUpdate();
-
-          if (window.isAdminUser && window.isAdminUser()) {
-            window.saveStockToCloud();
-          }
-        }, 100);
-
-        return result;
-      };
-      console.log("✅ editReady hooked");
-    }
-
-    // Hook importData
-    const origImport = window.importData;
-    if (origImport) {
-      window.importData = function() {
-        const result = origImport.apply(this, arguments);
-
-        setTimeout(() => {
-          forceUIUpdate();
-
-          if (window.isAdminUser && window.isAdminUser()) {
-            window.saveStockToCloud();
-          }
-        }, 400);
-
-        return result;
-      };
-      console.log("✅ importData hooked");
-    }
-
-    console.log("🔥 Real-Time Sync with FORCED UI updates - Ready!");
+    console.log("🔥 Firebase Real-Time Sync Ready!");
+    console.log("⏳ Functions will be hooked after page load...");
   </script>
 
 </body>
