@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Factory Stock System</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 420px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      padding: 40px;
+      animation: slideIn 0.4s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 15px;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    .form-group input:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 10px;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-login:active {
+      transform: translateY(0);
+    }
+
+    .error-msg {
+      background: #ffebee;
+      color: #c62828;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+
+    .hint {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: #888;
+    }
+
+    .hint b {
+      color: #667eea;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="header">
+      <h1>🏭 Factory Stock System</h1>
+      <p>Enter your credentials to continue</p>
+    </div>
+
+    <div id="error" class="error-msg">Invalid email or password!</div>
+
+    <form onsubmit="return false;">
+      <div class="form-group">
+        <label for="email">Email *</label>
+        <input type="email" id="email" placeholder="Enter your email" autocomplete="username" required>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password *</label>
+        <input type="password" id="password" placeholder="Enter password" autocomplete="current-password" required>
+      </div>
+
+      <button type="submit" class="btn-login" onclick="doLogin()">Login</button>
+    </form>
+
+    <div class="hint">
+      <b>Admin Users:</b> Full access<br>
+      <b>View Users:</b> Read-only access
+    </div>
+  </div>
+
+  <script>
+    // User configuration with roles
+    const USERS = {
+      // Admin users - Full access (IN, OUT, Ready buttons)
+      "suraj@ecompusell.com": { password: "suraj123", role: "admin", name: "Suraj" },
+      "birendra@ecompusell.com": { password: "birendra123", role: "admin", name: "Birendra" },
+
+      // View-only users - No IN/OUT/Ready buttons
+      "sujeet@ecompusell.com": { password: "sujeet123", role: "viewer", name: "Sujeet" },
+      "bhart@ecompusell.com": { password: "bhart123", role: "viewer", name: "Bhart" }
+    };
+
+    function doLogin() {
+      const email = document.getElementById("email").value.trim().toLowerCase();
+      const password = document.getElementById("password").value.trim();
+      const errorDiv = document.getElementById("error");
+
+      // Check if user exists
+      if (!USERS[email]) {
+        errorDiv.textContent = "User not found!";
+        errorDiv.style.display = "block";
+        setTimeout(() => { errorDiv.style.display = "none"; }, 3000);
+        return false;
+      }
+
+      // Validate password
+      if (USERS[email].password !== password) {
+        errorDiv.textContent = "Invalid password!";
+        errorDiv.style.display = "block";
+        setTimeout(() => { errorDiv.style.display = "none"; }, 3000);
+        return false;
+      }
+
+      // Store login state with role
+      localStorage.setItem("stock_login_ok", "1");
+      localStorage.setItem("stock_user_email", email);
+      localStorage.setItem("stock_user_role", USERS[email].role);
+      localStorage.setItem("stock_user_name", USERS[email].name);
+
+      // Redirect to main page
+      window.location.href = "index-2-new.html";
+      return false;
+    }
+
+    // Allow Enter key to submit
+    document.addEventListener("keypress", function(e) {
+      if (e.key === "Enter") {
+        doLogin();
+      }
+    });
+  </script>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factory Stock System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 30px; text-align: center; }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .header p { font-size: 1.2em; opacity: 0.9; }
+        .controls { padding: 25px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; }
+        .search-box { display: inline-block; margin-right: 15px; }
+        .search-box input { padding: 12px 20px; font-size: 16px; border: 2px solid #ddd; border-radius: 25px; width: 300px; outline: none; transition: all 0.3s; }
+        .search-box input:focus { border-color: #667eea; box-shadow: 0 0 10px rgba(102, 126, 234, 0.3); }
+        .category-select { padding: 12px 20px; font-size: 16px; background: white; border: 2px solid #ddd; border-radius: 25px; outline: none; margin-right: 15px; }
+        .btn { padding: 12px 30px; font-size: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 25px; cursor: pointer; transition: all 0.3s; font-weight: 600; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4); }
+        .results { padding: 25px; }
+        .stats { display: flex; gap: 20px; margin-bottom: 30px; }
+        .stat-card { flex: 1; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 25px; border-radius: 15px; text-align: center; }
+        .stat-number { font-size: 2.5em; font-weight: bold; margin-bottom: 5px; }
+        .stat-label { font-size: 1.1em; opacity: 0.9; }
+        .table-container { overflow-x: auto; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 18px 15px; text-align: left; font-weight: 600; position: sticky; top: 0; z-index: 10; }
+        td { padding: 15px; border-bottom: 1px solid #eee; transition: all 0.3s; }
+        tr:hover { background: #f8f9ff; transform: scale(1.01); }
+        .mono { background-color: #e3f2fd; }
+        .multi { background-color: #f3e5f5; }
+        .toner { background-color: #fff3e0; }
+        .drum { background-color: #e8f5e8; }
+        .parts { background-color: #fff8e1; }
+        .low-stock { background-color: #ffcdd2 !important; animation: pulse 2s infinite; }
+        .zero-stock { background-color: #ff5722 !important; color: white; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .no-results { text-align: center; padding: 60px; color: #666; font-size: 1.2em; }
+        .print-btn { background: linear-gradient(135deg, #00c851 0%, #007e33 100%); margin-left: 15px; }
+        @media screen { .print-only { display:none; } }
+        @media print { .print-only { display:block; } }
+        @media print { .controls, .btn { display: none; } .header { page-break-after: avoid; } }
+        .footer { padding: 25px; background: #f8f9fa; text-align: center; color: #666; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+  <!-- Login Protection & Role-Based Access Control -->
+  <script>
+    // Redirect to login if not authenticated
+    if (localStorage.getItem("stock_login_ok") !== "1") {
+      window.location.href = "login.html";
+    }
+
+    // Get user role and info
+    const USER_EMAIL = localStorage.getItem("stock_user_email") || "";
+    const USER_ROLE = localStorage.getItem("stock_user_role") || "viewer";
+    const USER_NAME = localStorage.getItem("stock_user_name") || "User";
+
+    // Check if user is admin
+    window.isAdminUser = function() {
+      return USER_ROLE === "admin";
+    };
+
+    // UI Setup
+    window.addEventListener("DOMContentLoaded", function() {
+      // User info in header
+      const header = document.querySelector(".header");
+      if (header) {
+        const userInfo = document.createElement("div");
+        userInfo.style.cssText = "font-size:14px; opacity:0.9; margin-top:8px;";
+        const roleIcon = USER_ROLE === "admin" ? "👨‍💼" : "👁️";
+        const roleText = USER_ROLE === "admin" ? "Admin" : "Viewer";
+        const roleColor = USER_ROLE === "admin" ? "#4caf50" : "#ff9800";
+        userInfo.innerHTML = roleIcon + ' <span style="color:' + roleColor + '; font-weight:600;">' + roleText + '</span> | ' + USER_NAME + ' (' + USER_EMAIL + ')';
+        header.appendChild(userInfo);
+      }
+
+      // Hide Import for viewers
+      if (USER_ROLE === "viewer") {
+        const importFile = document.getElementById("importFile");
+        const btnImport = document.getElementById("btnImport");
+        if (importFile) importFile.style.display = "none";
+        if (btnImport) btnImport.style.display = "none";
+      }
+
+      // Add logout button
+      const controls = document.querySelector(".controls");
+      if (controls) {
+        const logoutBtn = document.createElement("button");
+        logoutBtn.className = "btn";
+        logoutBtn.style.cssText = "background:#f44336; margin-left:10px;";
+        logoutBtn.textContent = "Logout";
+        logoutBtn.onclick = function() {
+          if (confirm("Are you sure you want to logout?")) {
+            localStorage.clear();
+            window.location.href = "login.html";
+          }
+        };
+        controls.appendChild(logoutBtn);
+      }
+    });
+  </script>
+
+    <div class="container">
+        <div class="header">
+            <h1>🏭 Factory Stock System</h1>
+            <p>Printers • Toners • Drums • Spare Parts</p>
+        </div>
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Search item code, description...">
+            </div>
+            <select id="categoryFilter" class="category-select">
+                <option value="">All Categories</option>
+                <option value="Cwc Mono printers">Mono Printers</option>
+                <option value="Cwc Multifunction printers">Multifunction Printers</option>
+                <option value="Cwc Toner">Toner</option>
+                <option value="Cwc Drum Unit">Drum Unit</option>
+                <option value="LOGIC CARD AND POWER SUPPLY">Logic Cards</option>
+                <option value="ALL PART">Spare Parts</option>
+            </select>
+            <input type="file" id="importFile" accept=".json,.csv,.txt" class="category-select" style="width:300px" />
+
+
+
+
+
+<button id="btnImport" onclick="importData()" class="btn" style="background:#6a1b9a;">Import</button>
+            <button onclick="exportData()" class="btn" style="background:#546e7a;">Export CSV</button>
+
+            <button onclick="filterStock()" class="btn">🔄 Refresh</button>
+            <button onclick="printReport()" class="btn print-btn">🖨️ Print Report</button>
+        </div>
+        <div class="results">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalItems">0</div>
+                    <div class="stat-label">Total Items</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="lowStock">0</div>
+                    <div class="stat-label">Low Stock</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="zeroStock">0</div>
+                    <div class="stat-label">Out of Stock</div>
+                </div>
+            </div>
+            <div class="table-container">
+                <table id="stockTable">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Item Code</th>
+                            <th>Description</th>
+                            <th>Current Stock</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stockBody">
+                    </tbody>
+                </table>
+            </div>
+            <div id="noResults" class="no-results" style="display: none;">
+                <h3>📭 No items found</h3>
+                <p>Try different search term or category filter</p>
+            </div>
+        </div>
+        <div id="printReport" class="print-only" style="padding: 20px;"></div>
+
+        <div class="footer">
+            <p>Last updated: <span id="lastUpdate"></span></p>
+            <p>Categories: Mono Printers • Multifunction • Toner • Drum • Logic Cards • Spare Parts</p>
+        </div>
+    </div>
+
+    <script>
+        let stockData = [{"code": "P5040DNW", "category": "Cwc Mono printers", "qty": 13, "status": "0 READY", "desc": "P5040DNW", "qty_raw": "13"}, {"code": "P5040DN", "category": "Cwc Mono printers", "qty": 4, "status": "0 READY", "desc": "P5040DN", "qty_raw": "4"}, {"code": "P5030DNW", "category": "Cwc Mono printers", "qty": 3, "status": "ALL READY", "desc": "P5030DNW", "qty_raw": "3"}, {"code": "P5020", "category": "Cwc Mono printers", "qty": 0, "status": "", "desc": "P5020", "qty_raw": "0"}, {"code": "PB5020NW", "category": "Cwc Mono printers", "qty": 30, "status": "21 READY", "desc": "PB5020NW", "qty_raw": "30"}, {"code": "P5010DNW", "category": "Cwc Mono printers", "qty": 9, "status": "ALL READY", "desc": "P5010DNW", "qty_raw": "9"}, {"code": "1020NW", "category": "Cwc Mono printers", "qty": 0, "status": "", "desc": "1020NW", "qty_raw": "0"}, {"code": "1020Plus", "category": "Cwc Mono printers", "qty": 0, "status": "", "desc": "1020Plus", "qty_raw": "0"}, {"code": "P4843", "category": "Cwc Mono printers", "qty": 690, "status": "", "desc": "P4843", "qty_raw": "690"}, {"code": "P310", "category": "Cwc Mono printers", "qty": 441, "status": "", "desc": "P310", "qty_raw": "441"}, {"code": "M5040DNW", "category": "Cwc Multifunction printers", "qty": 29, "status": "0 READY", "desc": "M5040DNW", "qty_raw": "29"}, {"code": "M5030DNW", "category": "Cwc Multifunction printers", "qty": 48, "status": "28READY", "desc": "M5030DNW", "qty_raw": "48"}, {"code": "MB5020NW", "category": "Cwc Multifunction printers", "qty": 14, "status": "ALL READY", "desc": "MB5020NW", "qty_raw": "14"}, {"code": "M2010DNW", "category": "Cwc Multifunction printers", "qty": 5, "status": "3 READY", "desc": "M2010DNW", "qty_raw": "5"}, {"code": "M1005NW", "category": "Cwc Multifunction printers", "qty": 2, "status": "", "desc": "M1005NW", "qty_raw": "2"}, {"code": "M1005Plus", "category": "Cwc Multifunction printers", "qty": 0, "status": "", "desc": "M1005Plus", "qty_raw": ""}, {"code": "3336", "category": "Cwc Multifunction printers", "qty": 459, "status": "", "desc": "3336", "qty_raw": "459"}, {"code": "4055", "category": "Cwc Multifunction printers", "qty": 834, "status": "", "desc": "4055", "qty_raw": "834"}, {"code": "TE201S", "category": "Cwc Toner", "qty": 299, "status": "", "desc": "TE201S", "qty_raw": "299"}, {"code": "TE502S", "category": "Cwc Toner", "qty": 0, "status": "", "desc": "TE502S", "qty_raw": "0"}, {"code": "TE504S", "category": "Cwc Toner", "qty": 240, "status": "", "desc": "TE504S", "qty_raw": "240"}, {"code": "TE503S", "category": "Cwc Toner", "qty": 76, "status": "7 NOT REDY", "desc": "TE503S", "qty_raw": "76"}, {"code": "102-2K", "category": "Cwc Toner", "qty": 119, "status": "ALL  READY", "desc": "102-2K", "qty_raw": "119"}, {"code": "T-3333-3K", "category": "Cwc Toner", "qty": 500, "status": "", "desc": "T-3333-3K", "qty_raw": "500"}, {"code": "T-3336-6K", "category": "Cwc Toner", "qty": 200, "status": "", "desc": "T-3336-6K", "qty_raw": "200"}, {"code": "T-310-1.5K", "category": "Cwc Toner", "qty": 498, "status": "", "desc": "T-310-1.5K", "qty_raw": "498"}, {"code": "T4843-3K", "category": "Cwc Toner", "qty": 285, "status": "", "desc": "T4843-3K", "qty_raw": "285"}, {"code": "T4846-6K", "category": "Cwc Toner", "qty": 500, "status": "", "desc": "T4846-6K", "qty_raw": "500"}, {"code": "DM504", "category": "Cwc Drum Unit", "qty": 407, "status": "260 READY", "desc": "DM504", "qty_raw": "407"}, {"code": "DM503", "category": "Cwc Drum Unit", "qty": 93, "status": "66 READY", "desc": "DM503", "qty_raw": "93"}, {"code": "D310", "category": "Cwc Drum Unit", "qty": 198, "status": "", "desc": "D310", "qty_raw": "198"}, {"code": "1020NW 1ST LOT", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 18, "status": "", "desc": "1020NW 1ST LOT", "qty_raw": "18"}, {"code": "1020NW 2ND LOT", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 73, "status": "", "desc": "1020NW 2ND LOT", "qty_raw": "73"}, {"code": "1020PLUS 1ST LOT", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 61, "status": "", "desc": "1020PLUS 1ST LOT", "qty_raw": "26+35"}, {"code": "1020PLUS 2ND LOT", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 35, "status": "", "desc": "1020PLUS 2ND LOT", "qty_raw": "35"}, {"code": "1005NW 1ST LOT", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 30, "status": "", "desc": "1005NW 1ST LOT", "qty_raw": "30"}, {"code": "1005NW 2ND LOT", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 28, "status": "", "desc": "1005NW 2ND LOT", "qty_raw": "28"}, {"code": "1005PLUS1ST LOT", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 20, "status": "", "desc": "1005PLUS1ST LOT", "qty_raw": "3+17"}, {"code": "1005PLUS 2ND LOT", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 0, "status": "", "desc": "1005PLUS 2ND LOT", "qty_raw": "0"}, {"code": "1020/1005 POWER SUPPLY", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 90, "status": "", "desc": "1020/1005 POWER SUPPLY", "qty_raw": "90"}, {"code": "P/M5040DNW POWER SUPPLY", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 9, "status": "", "desc": "P/M5040DNW POWER SUPPLY", "qty_raw": "9"}, {"code": "P5040DNW", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 1, "status": "", "desc": "P5040DNW", "qty_raw": "1"}, {"code": "P5040DN", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 4, "status": "", "desc": "P5040DN", "qty_raw": "4"}, {"code": "M5040DNW", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 0, "status": "", "desc": "M5040DNW", "qty_raw": "0"}, {"code": "504 OPC DRUM", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 100, "status": "", "desc": "504 OPC DRUM", "qty_raw": "100"}, {"code": "CHIP DM-504", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 45, "status": "", "desc": "CHIP DM-504", "qty_raw": "45"}, {"code": "CHIP TE-504S", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 55, "status": "", "desc": "CHIP TE-504S", "qty_raw": "38+17"}, {"code": "CHIP DM503", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 50, "status": "", "desc": "CHIP DM503", "qty_raw": "50"}, {"code": "CHIP TE-503S", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 31, "status": "", "desc": "CHIP TE-503S", "qty_raw": "31"}, {"code": "CHIP TE-201S", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 50, "status": "", "desc": "CHIP TE-201S", "qty_raw": "50"}, {"code": "CHIP TE-502S", "category": "LOGIC CARD AND POWER SUPPLY", "qty": 50, "status": "", "desc": "CHIP TE-502S", "qty_raw": "50"}, {"code": "1020 FUSER 1ST LOT", "category": "ALL PART", "qty": 19, "status": "", "desc": "1020 FUSER 1ST LOT", "qty_raw": "19"}, {"code": "1020 FUSER 2ND LOT", "category": "ALL PART", "qty": 71, "status": "", "desc": "1020 FUSER 2ND LOT", "qty_raw": "71"}, {"code": "1005 FUSER 2ND LOT", "category": "ALL PART", "qty": 74, "status": "", "desc": "1005 FUSER 2ND LOT", "qty_raw": "74"}, {"code": "1020/1005 FUSE WIRE", "category": "ALL PART", "qty": 85, "status": "", "desc": "1020/1005 FUSE WIRE", "qty_raw": "85"}, {"code": "1020/1005 FUSER LAMP", "category": "ALL PART", "qty": 39, "status": "", "desc": "1020/1005 FUSER LAMP", "qty_raw": "39"}, {"code": "1020/1005 UPPER THERMISTOR", "category": "ALL PART", "qty": 78, "status": "", "desc": "1020/1005 UPPER THERMISTOR", "qty_raw": "78"}, {"code": "1020/1005 LASER", "category": "ALL PART", "qty": 22, "status": "", "desc": "1020/1005 LASER", "qty_raw": "22"}, {"code": "1020/1005 FUSER EXIT ROLLER", "category": "ALL PART", "qty": 49, "status": "", "desc": "1020/1005 FUSER EXIT ROLLER", "qty_raw": "49"}, {"code": "1020/1005 PRESSURE ROLLER", "category": "ALL PART", "qty": 117, "status": "", "desc": "1020/1005 PRESSURE ROLLER", "qty_raw": "117"}, {"code": "1020/1005 SLEEVES", "category": "ALL PART", "qty": 127, "status": "", "desc": "1020/1005 SLEEVES", "qty_raw": "127"}, {"code": "1005 CCD SCANNER", "category": "ALL PART", "qty": 27, "status": "", "desc": "1005 CCD SCANNER", "qty_raw": "27"}, {"code": "1020/1005 PICKUP ASSEMBLY", "category": "ALL PART", "qty": 50, "status": "", "desc": "1020/1005 PICKUP ASSEMBLY", "qty_raw": "50"}, {"code": "1005 PICKUP ASSEMBLY 2ND LOT", "category": "ALL PART", "qty": 50, "status": "", "desc": "1005 PICKUP ASSEMBLY 2ND LOT", "qty_raw": "50"}, {"code": "1020 PICKUP ASSEMBLY 1ST LOT", "category": "ALL PART", "qty": 24, "status": "", "desc": "1020 PICKUP ASSEMBLY 1ST LOT", "qty_raw": "24"}, {"code": "1020 FUSER TENTION LIVER LEFT RIGHT", "category": "ALL PART", "qty": 100, "status": "", "desc": "1020 FUSER TENTION LIVER LEFT RIGHT", "qty_raw": "100"}, {"code": "1020/1005 SOLONITE", "category": "ALL PART", "qty": 11, "status": "", "desc": "1020/1005 SOLONITE", "qty_raw": "11"}, {"code": "1020/1005 FUSER PAPER LIVER", "category": "ALL PART", "qty": 81, "status": "", "desc": "1020/1005 FUSER PAPER LIVER", "qty_raw": "81"}, {"code": "1020/1005 CHIP CONECTOR", "category": "ALL PART", "qty": 5, "status": "", "desc": "1020/1005 CHIP CONECTOR", "qty_raw": "5"}, {"code": "1020/1005 ENGINE CARD", "category": "ALL PART", "qty": 17, "status": "", "desc": "1020/1005 ENGINE CARD", "qty_raw": "17"}, {"code": "M2010/P5010 PICKUP ROLLER WITH KIT", "category": "ALL PART", "qty": 100, "status": "", "desc": "M2010/P5010 PICKUP ROLLER WITH KIT", "qty_raw": "100"}, {"code": "M2010/P5010 PICKUP ROLLER TYRE", "category": "ALL PART", "qty": 150, "status": "", "desc": "M2010/P5010 PICKUP ROLLER TYRE", "qty_raw": "150"}, {"code": "SEPRATION PAD STICKER", "category": "ALL PART", "qty": 29, "status": "", "desc": "SEPRATION PAD STICKER", "qty_raw": "29"}, {"code": "X2600N CONTROL IC", "category": "ALL PART", "qty": 0, "status": "", "desc": "X2600N CONTROL IC", "qty_raw": "0"}, {"code": "X2600H CONTROL IC", "category": "ALL PART", "qty": 0, "status": "", "desc": "X2600H CONTROL IC", "qty_raw": "0"}];
+
+        let currentData = stockData;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+      // Autosave: restore stockData after refresh
+      try {
+        const saved = localStorage.getItem('stockData');
+        if (saved) {
+          stockData = JSON.parse(saved) || stockData;
+        }
+      } catch(e) {}
+
+            rebuildCategoryOptions();
+            loadStock();
+            // normalize empty status to '0'
+            stockData.forEach(x => { if (x.status === undefined || x.status === null || String(x.status).trim() === '') x.status = '0'; });
+            document.getElementById('searchInput').addEventListener('input', filterStock);
+            document.getElementById('categoryFilter').addEventListener('change', filterStock);
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleString('en-IN');
+      // AUTOSAVE_BOOTSTRAP_DONE
+      try { rebuildCategoryOptions(); } catch(e) {}
+      try { filterStock(); } catch(e) {}
+        });
+
+        function loadStock() {
+            currentData = stockData;
+            filterStock();
+        }// Save changes to browser storage (refresh safe)
+try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData', JSON.stringify(stockData)); } } catch(e) {}
+
+
+        function filterStock() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
+
+            const filtered = currentData.filter(item => {
+                const matchesSearch = item.code.toLowerCase().includes(searchTerm) ||
+                                    item.category.toLowerCase().includes(searchTerm);
+                const matchesCategory = !category || item.category === category;
+                return matchesSearch && matchesCategory;
+            });
+
+            displayStock(filtered);
+        }
+
+        function displayStock(data) {
+            const tbody = document.getElementById('stockBody');
+            const noResults = document.getElementById('noResults');
+
+            // Stats
+            const total = stockData.length;
+            const lowStock = stockData.filter(item => item.qty <= 5).length;
+            const zeroStock = stockData.filter(item => item.qty === 0).length;
+
+            document.getElementById('totalItems').textContent = total;
+            document.getElementById('lowStock').textContent = lowStock;
+            document.getElementById('zeroStock').textContent = zeroStock;
+
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                noResults.style.display = 'block';
+                return;
+            }
+
+            noResults.style.display = 'none';
+
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = getCategoryClass(item.category);
+
+                if (item.qty <= 5) row.classList.add('low-stock');
+                if (item.qty === 0) row.classList.add('zero-stock');
+
+                row.innerHTML = `
+                    <td><strong>${item.category}</strong></td>
+                    <td><strong>${item.code}</strong></td>
+                    <td>${item.desc || item.code}</td>
+                    <td><strong style="font-size: 1.2em; color: ${item.qty === 0 ? '#ff5722' : item.qty <= 5 ? '#ff9800' : '#4caf50'}">${item.qty}</strong></td>
+                    <td>${item.status || '0'}<td>
+  ${ (typeof window.isAdminUser === "function" && window.isAdminUser())
+      ? `<button onclick="updateStock('${item.code}','IN')" class="btn" style="background:#4caf50;padding:8px 15px;font-size:12px;margin-right:5px;">IN</button>
+         <button onclick="updateStock('${item.code}','OUT')" class="btn" style="background:#f44336;padding:8px 15px;font-size:12px;margin-right:5px;">OUT</button>
+         <button onclick="editReady('${item.code}')" class="btn" style="background:#ff9800;padding:8px 15px;font-size:12px;margin-right:5px;">Ready</button>`
+      : `<span style="color:#777;font-size:12px;">View only</span>`
+    }
+</td>
+
+                    <td>
+                        
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function getCategoryClass(category) {
+            if (category.includes('Mono')) return 'mono';
+            if (category.includes('Multifunction')) return 'multi';
+            if (category.includes('Toner')) return 'toner';
+            if (category.includes('Drum')) return 'drum';
+            if (category.includes('LOGIC') || category.includes('PART')) return 'parts';
+            return '';
+        }
+
+        function updateStock(itemCode, type) {
+            const qty = prompt(`Enter ${type} quantity for ${itemCode}:`);
+            if (qty && !isNaN(qty) && qty > 0) {
+                const item = stockData.find(i => i.code === itemCode);
+                if (item) {
+                    item.qty += (type === 'IN' ? parseInt(qty) : -parseInt(qty));
+                    if (item.qty < 0) item.qty = 0;
+                    localStorage.setItem('stockData', JSON.stringify(stockData));
+                    persistAll();
+      filterStock();
+                    alert(`${qty} ${type} updated for ${itemCode}`);if (window.saveStockToCloud) window.saveStockToCloud();
+    
+
+                }
+            }
+        }
+    
+
+        // ===== Robust Import (CSV/JSON) =====
+        function parseQtySmart(q) {
+            const s = String(q ?? '').trim();
+            if (!s) return 0;
+            if (/^\d+(\s*\+\s*\d+)+$/.test(s)) {
+                return s.split('+').map(x => Number(x.trim()) || 0).reduce((a,b)=>a+b,0);
+            }
+            const n = Number(s);
+            return Number.isFinite(n) ? n : 0;
+        }
+
+        function splitCSVLineSmart(line, delim) {
+            const out = [];
+            let cur = '';
+            let inQ = false;
+            for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                if (ch === '"') {
+                    if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+                    else { inQ = !inQ; }
+                } else if (!inQ && ch === delim) {
+                    out.push(cur); cur = '';
+                } else {
+                    cur += ch;
+                }
+            }
+            out.push(cur);
+            return out.map(x => x.trim());
+        }
+
+        function detectDelimiterSmart(headerLine) {
+            const line = String(headerLine || '').replace(/^\uFEFF/, '');
+            const comma = (line.match(/,/g) || []).length;
+            const semi  = (line.match(/;/g) || []).length;
+            const tab   = (line.match(/\t/g) || []).length;
+            if (tab > comma && tab > semi) return '\t';
+            if (semi > comma) return ';';
+            return ',';
+        }
+
+        function rebuildCategoryOptions() {
+            const sel = document.getElementById('categoryFilter');
+            if (!sel) return;
+            const current = sel.value;
+            const cats = Array.from(new Set(stockData.map(x => x.category).filter(Boolean))).sort();
+            sel.innerHTML = '<option value="">All Categories</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+            if (cats.includes(current)) sel.value = current;
+        }
+
+        function parseCSV_Simple(text) {
+            let lines = String(text || '').replace(/\r/g,'').split('\n').filter(l => l.trim() !== '');
+            if (!lines.length) return [];
+            if (lines[0].toLowerCase().startsWith('sep=')) lines = lines.slice(1);
+            if (lines.length < 2) return [];
+
+            const delim = detectDelimiterSmart(lines[0]);
+            const header = splitCSVLineSmart(lines[0], delim).map(h => h.toLowerCase());
+
+            const idxCategory = header.indexOf('category');
+            const idxCode = header.indexOf('code') >= 0 ? header.indexOf('code') : header.indexOf('item code');
+            const idxDesc = header.indexOf('desc') >= 0 ? header.indexOf('desc') : header.indexOf('description');
+            const idxQty = header.indexOf('qty');
+            const idxStatus = header.indexOf('status');
+            if (idxCode < 0) return [];
+
+            const out = [];
+            for (let i=1; i<lines.length; i++) {
+                const cols = splitCSVLineSmart(lines[i], delim);
+                const code = String(cols[idxCode] || '').trim();
+                if (!code) continue;
+                out.push({
+                    category: idxCategory >= 0 ? String(cols[idxCategory]||'').trim() : '',
+                    code: code,
+                    desc: String((idxDesc >= 0 ? cols[idxDesc] : '') || '').trim() || code,
+                    qty: parseQtySmart(idxQty >= 0 ? cols[idxQty] : 0),
+                    status: idxStatus >= 0 ? String(cols[idxStatus]||'').trim() : ''
+                });
+            }
+            return out;
+        }
+
+        function parseCSV_ExcelExport(text) {
+            let lines = String(text || '').replace(/\r/g,'').split('\n').filter(l => l.trim() !== '');
+            if (!lines.length) return [];
+            if (lines[0].toLowerCase().startsWith('sep=')) lines = lines.slice(1);
+            if (lines.length < 2) return [];
+
+            const delim = detectDelimiterSmart(lines[0]);
+            const header = splitCSVLineSmart(lines[0], delim).map(h => h.toLowerCase());
+
+            const idxSr = header.findIndex(h => h.includes('sr'));
+            const idxItem = header.findIndex(h => h.includes('item description'));
+            const idxMake = header.findIndex(h => h.includes('make model'));
+            const idxQty = header.findIndex(h => h.includes('qty'));
+            const idxStatus = header.findIndex(h => h.includes('unnamed'));
+            if (idxItem < 0 || idxQty < 0) return [];
+
+            let currentCat = '';
+            const out = [];
+
+            for (let i=1; i<lines.length; i++) {
+                const cols = splitCSVLineSmart(lines[i], delim);
+                const sr = idxSr >= 0 ? String(cols[idxSr]||'').trim() : '';
+                const item = String(cols[idxItem]||'').trim();
+                const qtyCell = String(cols[idxQty]||'').trim();
+                const make = idxMake >= 0 ? String(cols[idxMake]||'').trim() : '';
+                const st = idxStatus >= 0 ? String(cols[idxStatus]||'').trim() : '';
+                if (!item) continue;
+                if (!sr && !qtyCell) { currentCat = item; continue; }
+                if (item.toLowerCase() === 'total') continue;
+                out.push({ category: currentCat || 'Uncategorized', code: item, desc: make || item, qty: parseQtySmart(qtyCell), status: st });
+            }
+            return out;
+        }
+
+        function importData() {
+            const fileInput = document.getElementById('importFile');
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                alert('Choose a CSV/JSON file first.');
+                return;
+            }
+            const file = fileInput.files[0];
+            const name = (file.name || '').toLowerCase();
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    const text = e.target.result;
+                    let imported = [];
+
+                    if (name.endsWith('.json')) {
+                        const obj = JSON.parse(text);
+                        if (!Array.isArray(obj)) throw new Error('JSON must be an array');
+                        imported = obj.map(x => ({
+                            code: String(x.code || x.item || x.ItemCode || '').trim(),
+                            category: String(x.category || x.Category || '').trim(),
+                            desc: String(x.desc || x.description || x.Description || '').trim() || String(x.code || '').trim(),
+                            qty: Number(x.qty ?? x.Qty ?? 0),
+                            status: String(x.status || x.Status || '').trim()
+                        })).filter(x => x.code);
+                        imported.forEach(x => { if (!Number.isFinite(x.qty)) x.qty = 0; });
+                    } else {
+                        imported = parseCSV_Simple(text);
+                        if (imported.length === 0) imported = parseCSV_ExcelExport(text);
+                    }
+
+                    if (imported.length === 0) {
+                        alert('No valid rows found.\nTry: Excel → Save As → CSV (UTF-8).');
+                        return;
+                    }
+
+                    // MUTATE array (safe even if const)
+                    stockData.length = 0;
+                    imported.forEach(x => stockData.push(x));
+
+                    localStorage.setItem('stockData', JSON.stringify(stockData));
+                    rebuildCategoryOptions();
+                    filterStock();
+                    alert('Imported ' + imported.length + ' rows.');
+          persistAll();if (window.saveStockToCloud) window.saveStockToCloud();
+
+                } catch (err) {
+                    alert('Import failed: ' + err.message);
+                }
+            };
+
+            reader.readAsText(file);
+        }
+
+        function exportData() {
+            const blob = new Blob([JSON.stringify(stockData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'stock_export.json';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+
+        // ===== Change Log + Ready Edit + CSV Export + Print Summary =====
+        const LOG_KEY = 'stockChangeLog_v1';
+
+        function pad2(n){ return String(n).padStart(2,'0'); }
+        function toDateKey(d){ return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
+        function toTimeStr(d){ return pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds()); }
+        function formatDMY(d){ return d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear(); }
+
+        function loadLog(){
+            try { const s = localStorage.getItem(LOG_KEY); const a = s ? JSON.parse(s) : []; return Array.isArray(a) ? a : []; }
+            catch(e){ return []; }
+        }
+        function saveLog(a){ try { localStorage.setItem(LOG_KEY, JSON.stringify(a)); } catch(e){} }
+        function logChange(entry){
+            const a = loadLog();
+            a.push(entry);
+            if (a.length > 5000) a.splice(0, a.length - 5000);
+            saveLog(a);
+        }
+        function makeLog(action, item, extra){
+            const d = new Date();
+            return Object.assign({
+                ts: d.toISOString(),
+                date: toDateKey(d),
+                time: toTimeStr(d),
+                action,
+                code: item && item.code ? item.code : '',
+                category: item && item.category ? item.category : '',
+                desc: item && (item.desc || item.code) ? (item.desc || item.code) : '',
+                oldQty: null,
+                newQty: null,
+                deltaQty: null,
+                oldStatus: null,
+                newStatus: null,
+                note: ''
+            }, extra || {});
+        }
+
+        function parseReadyQty(text, availableQty){
+            const s = String(text || '').trim();
+            if (!s) return 0;
+            if (/\ball\b/i.test(s)) return Number(availableQty || 0);
+            const m = s.match(/^(\d+)/);
+            return m ? Number(m[1]) : 0;
+        }
+
+        // Ready stock edit: If ready qty > available qty, available becomes ready qty.
+        function editReady(itemCode){if (!(typeof window.isAdminUser === "function" && window.isAdminUser())) {
+  alert("Read-only user");
+  return;
+}
+            const item = stockData.find(i => i.code === itemCode);
+            if (!item) return;
+
+            const oldStatus = String(item.status || '0');
+            const oldQty = Number(item.qty || 0);
+            const oldReadyQty = parseReadyQty(oldStatus, oldQty);
+
+            const input = prompt('Enter Ready Stock (example: "5 READY" or "ALL READY"):', oldStatus);
+            if (input === null) return;
+
+            const newStatus = String(input).trim() || '0';
+            item.status = newStatus;
+
+            const newReadyQty = parseReadyQty(newStatus, oldQty);
+            let newQty = oldQty;
+            if (newReadyQty > oldQty) {
+                newQty = newReadyQty;
+                item.qty = newQty;
+            }
+
+            try { localStorage.setItem('stockData', JSON.stringify(stockData)); } catch(e){}
+            persistAll();
+      filterStock();if (window.saveStockToCloud) window.saveStockToCloud();
+
+
+            const delta = newQty - oldQty;
+            logChange(makeLog('READY', item, {
+                oldQty: oldQty,
+                newQty: newQty,
+                deltaQty: delta !== 0 ? delta : null,
+                oldStatus: oldStatus,
+                newStatus: newStatus,
+                note: 'Ready changed ' + oldReadyQty + '→' + newReadyQty + (newQty !== oldQty ? ' (Available adjusted)' : '')
+            }));
+        }
+
+        // Wrap updateStock to log qty change with date/time
+        (function(){
+            if (typeof updateStock !== 'function') return;
+            const _updateStock = updateStock;
+            updateStock = function(itemCode, type){
+                const item = stockData.find(i => i.code === itemCode);
+                const oldQty = item ? Number(item.qty || 0) : 0;
+                _updateStock(itemCode, type);
+                const item2 = stockData.find(i => i.code === itemCode);
+                const newQty = item2 ? Number(item2.qty || 0) : oldQty;
+                if (item2 && newQty !== oldQty){
+                    logChange(makeLog(type, item2, { oldQty, newQty, deltaQty: newQty-oldQty, note: 'Qty ' + type }));
+                }
+            };
+        })();
+
+        // Wrap importData to log an import event
+        (function(){
+            if (typeof importData !== 'function') return;
+            const _importData = importData;
+            importData = function(){
+                logChange(makeLog('IMPORT', {code:'',category:'',desc:''}, { note: 'Import started' }));
+                _importData();
+            };
+        })();
+
+        // Export CSV in your same structure
+        function csvEscape(v){
+            const s = String(v ?? '');
+            if (/[\n\r",]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
+            return s;
+        }
+
+        function exportData(){
+            const today = formatDMY(new Date());
+
+            const header = ['Sr. No.','Date','Item Description','Make Model','Avalible stock','Ready  Stock'];
+            const lines = [header.map(csvEscape).join(',')];
+
+            const cats = [];
+            const seen = new Set();
+            stockData.forEach(it => {
+                const c = String(it.category || '').trim();
+                if (c && !seen.has(c)) { seen.add(c); cats.push(c); }
+            });
+
+            cats.forEach(cat => {
+                lines.push(['', today, cat, '', '', ''].map(csvEscape).join(','));
+                const items = stockData.filter(x => x.category === cat);
+                let sr = 1;
+                items.forEach(it => {
+                    const code = it.code || '';
+                    const makeModel = (it.desc && it.desc !== code) ? it.desc : '';
+                    const qty = Number(it.qty || 0);
+                    const ready = String(it.status || '0');
+                    lines.push([sr++, '', code, makeModel, qty, ready].map(csvEscape).join(','));
+                });
+            });
+
+            lines.push(['', '', 'TOTAL', '', '', ''].map(csvEscape).join(','));
+
+            const csv = lines.join('\n');
+            const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Factory-Stock-Printer-And-Cartridge1.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+
+            logChange(makeLog('EXPORT', {code:'',category:'',desc:''}, { note: 'CSV exported' }));
+        }
+
+        // Print: daily summary + log table (print-only)
+        function buildDailySummary(dateKey){
+            const logs = loadLog().filter(x => x && x.date === dateKey);
+            let inQty=0, outQty=0, net=0;
+            let qtyActions=0, statusActions=0;
+            const changed = new Set();
+
+            logs.forEach(l => {
+                if (l.code) changed.add(l.code);
+                if (l.action === 'IN' || l.action === 'OUT' || l.action === 'SET'){
+                    const d = Number(l.deltaQty);
+                    if (Number.isFinite(d) && d !== 0){
+                        net += d;
+                        if (d > 0) inQty += d; else outQty += Math.abs(d);
+                        qtyActions += 1;
+                    }
+                }
+                if (l.action === 'READY' || l.action === 'STATUS') statusActions += 1;
+            });
+
+            return { logs, inQty, outQty, net, qtyActions, statusActions, changedItems: changed.size };
+        }
+
+        function esc(s){
+            return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function renderPrintReport(dateKey){
+            const now = new Date();
+            const sum = buildDailySummary(dateKey);
+
+            const head = `
+              <div style="margin-bottom:12px;">
+                <h2 style="margin:0;">Daily Stock Report</h2>
+                <div style="color:#555; font-size:12px;">Report Date: <b>${esc(dateKey)}</b> | Printed: ${esc(now.toLocaleString('en-IN'))}</div>
+              </div>
+            `;
+
+            const cards = `
+              <table style="width:100%; border-collapse:collapse; margin-bottom:12px;">
+                <tr>
+                  <td style="padding:8px; border:1px solid #ddd;">IN Qty</td>
+                  <td style="padding:8px; border:1px solid #ddd;"><b>${sum.inQty}</b></td>
+                  <td style="padding:8px; border:1px solid #ddd;">OUT Qty</td>
+                  <td style="padding:8px; border:1px solid #ddd;"><b>${sum.outQty}</b></td>
+                  <td style="padding:8px; border:1px solid #ddd;">Net</td>
+                  <td style="padding:8px; border:1px solid #ddd;"><b>${sum.net}</b></td>
+                </tr>
+                <tr>
+                  <td style="padding:8px; border:1px solid #ddd;">Qty actions</td>
+                  <td style="padding:8px; border:1px solid #ddd;"><b>${sum.qtyActions}</b></td>
+                  <td style="padding:8px; border:1px solid #ddd;">Ready/Status actions</td>
+                  <td style="padding:8px; border:1px solid #ddd;"><b>${sum.statusActions}</b></td>
+                  <td style="padding:8px; border:1px solid #ddd;">Items changed</td>
+                  <td style="padding:8px; border:1px solid #ddd;"><b>${sum.changedItems}</b></td>
+                </tr>
+              </table>
+            `;
+
+            const rows = sum.logs.map(l => {
+              const dq = (l.deltaQty === null || l.deltaQty === undefined) ? '' : l.deltaQty;
+              const oq = (l.oldQty === null || l.oldQty === undefined) ? '' : l.oldQty;
+              const nq = (l.newQty === null || l.newQty === undefined) ? '' : l.newQty;
+              const os = (l.oldStatus === null || l.oldStatus === undefined) ? '' : l.oldStatus;
+              const ns = (l.newStatus === null || l.newStatus === undefined) ? '' : l.newStatus;
+              return `
+                <tr>
+                  <td style="padding:6px; border:1px solid #ddd;">${esc(l.time || '')}</td>
+                  <td style="padding:6px; border:1px solid #ddd;">${esc(l.action || '')}</td>
+                  <td style="padding:6px; border:1px solid #ddd;">${esc(l.category || '')}</td>
+                  <td style="padding:6px; border:1px solid #ddd;"><b>${esc(l.code || '')}</b></td>
+                  <td style="padding:6px; border:1px solid #ddd;">${esc(l.desc || '')}</td>
+                  <td style="padding:6px; border:1px solid #ddd; text-align:right;">${esc(dq)}</td>
+                  <td style="padding:6px; border:1px solid #ddd; text-align:right;">${esc(oq)}</td>
+                  <td style="padding:6px; border:1px solid #ddd; text-align:right;">${esc(nq)}</td>
+                  <td style="padding:6px; border:1px solid #ddd;">${esc(os)}</td>
+                  <td style="padding:6px; border:1px solid #ddd;">${esc(ns)}</td>
+                  <td style="padding:6px; border:1px solid #ddd;">${esc(l.note || '')}</td>
+                </tr>
+              `;
+            }).join('');
+
+            const logTable = `
+              <h3 style="margin: 12px 0 6px 0;">Change Log</h3>
+              <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                <thead>
+                  <tr>
+                    <th style="padding:6px; border:1px solid #ddd;">Time</th>
+                    <th style="padding:6px; border:1px solid #ddd;">Action</th>
+                    <th style="padding:6px; border:1px solid #ddd;">Category</th>
+                    <th style="padding:6px; border:1px solid #ddd;">Code</th>
+                    <th style="padding:6px; border:1px solid #ddd;">Desc</th>
+                    <th style="padding:6px; border:1px solid #ddd;">ΔQty</th>
+                    <th style="padding:6px; border:1px solid #ddd;">Old</th>
+                    <th style="padding:6px; border:1px solid #ddd;">New</th>
+                    <th style="padding:6px; border:1px solid #ddd;">Old Ready</th>
+                    <th style="padding:6px; border:1px solid #ddd;">New Ready</th>
+                    <th style="padding:6px; border:1px solid #ddd;">Note</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rows || '<tr><td colspan="11" style="padding:10px; border:1px solid #ddd;">No changes for this date.</td></tr>'}
+                </tbody>
+              </table>
+            `;
+
+            const reportDiv = document.getElementById('printReport');
+            if (reportDiv) reportDiv.innerHTML = head + cards + logTable;
+        }
+
+        function printReport(){
+            const def = toDateKey(new Date());
+            const dateKey = prompt('Report date (YYYY-MM-DD). Blank = today:', def) || def;
+            renderPrintReport(dateKey);
+            window.print();
+        }
+
+
+    function persistAll(){
+      try { localStorage.setItem('stockData', JSON.stringify(stockData)); } catch(e) {}
+    }
+</script>
+
+
+  <!-- Firebase Real-Time Sync -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // Firebase Configuration (Your existing config)
+    const firebaseConfig = {
+      apiKey: "AIzaSyAMFUOzvtb3mEex2bN7HeTPQWANHPWkbik",
+      authDomain: "factorystock-1b8c4.firebaseapp.com",
+      projectId: "factorystock-1b8c4",
+      storageBucket: "factorystock-1b8c4.firebasestorage.app",
+      messagingSenderId: "696165656175",
+      appId: "1:696165656175:web:fdd11fef8d983ef86e0f9a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const stockRef = doc(db, "app", "stock");
+
+    let isSyncing = false;
+
+    // Real-time listener - Auto-update when data changes
+    onSnapshot(stockRef, { includeMetadataChanges: true }, (snapshot) => {
+      // Ignore cache updates, only process server updates
+      if (snapshot.metadata.fromCache) return;
+
+      const data = snapshot.data();
+      if (data && Array.isArray(data.items)) {
+        isSyncing = true;
+
+        // Update global stockData
+        window.stockData = data.items;
+        window.currentData = window.stockData;
+
+        // Save to localStorage
+        try {
+          localStorage.setItem("stockData", JSON.stringify(window.stockData));
+        } catch(e) {}
+
+        // Refresh UI
+        if (typeof window.rebuildCategoryOptions === "function") {
+          window.rebuildCategoryOptions();
+        }
+        if (typeof window.filterStock === "function") {
+          window.filterStock();
+        }
+
+        // Show sync indicator
+        showSyncStatus("✓ Synced with cloud", "success");
+
+        setTimeout(() => { isSyncing = false; }, 500);
+      }
+    }, (error) => {
+      console.error("Firebase sync error:", error);
+      showSyncStatus("⚠ Sync error - Using local data", "error");
+    });
+
+    // Save to cloud (only for admin users)
+    window.saveStockToCloud = async function() {
+      const userRole = localStorage.getItem("stock_user_role");
+      if (userRole !== "admin") {
+        console.log("Viewer users cannot save to cloud");
+        return;
+      }
+
+      if (isSyncing) return; // Prevent loop
+
+      try {
+        showSyncStatus("⟳ Saving to cloud...", "info");
+
+        await setDoc(stockRef, {
+          items: window.stockData,
+          updatedAt: serverTimestamp(),
+          updatedBy: localStorage.getItem("stock_user_email") || "Unknown"
+        }, { merge: true });
+
+        showSyncStatus("✓ Saved to cloud", "success");
+      } catch (error) {
+        console.error("Save error:", error);
+        showSyncStatus("✗ Save failed", "error");
+      }
+    };
+
+    // Sync status indicator
+    function showSyncStatus(message, type) {
+      let indicator = document.getElementById("syncIndicator");
+      if (!indicator) {
+        indicator = document.createElement("div");
+        indicator.id = "syncIndicator";
+        indicator.style.cssText = "position:fixed; top:10px; right:10px; padding:10px 15px; border-radius:8px; font-size:13px; z-index:9999; transition:all 0.3s; box-shadow:0 4px 12px rgba(0,0,0,0.15);";
+        document.body.appendChild(indicator);
+      }
+
+      const colors = {
+        success: "background:#4caf50; color:white;",
+        error: "background:#f44336; color:white;",
+        info: "background:#2196f3; color:white;"
+      };
+
+      indicator.style.cssText += colors[type] || colors.info;
+      indicator.textContent = message;
+      indicator.style.display = "block";
+
+      setTimeout(() => {
+        indicator.style.display = "none";
+      }, 3000);
+    }
+
+    // Hook into existing update functions to auto-save
+    const originalUpdateStock = window.updateStock;
+    if (typeof originalUpdateStock === "function") {
+      window.updateStock = function() {
+        originalUpdateStock.apply(this, arguments);
+        setTimeout(() => {
+          if (window.isAdminUser && typeof window.isAdminUser === "function" && window.isAdminUser()) {
+            window.saveStockToCloud();
+          }
+        }, 300);
+      };
+    }
+
+    // Hook into importData
+    const originalImportData = window.importData;
+    if (typeof originalImportData === "function") {
+      window.importData = function() {
+        originalImportData.apply(this, arguments);
+        setTimeout(() => {
+          if (window.isAdminUser && typeof window.isAdminUser === "function" && window.isAdminUser()) {
+            window.saveStockToCloud();
+          }
+        }, 500);
+      };
+    }
+
+    console.log("🔥 Firebase Real-Time Sync Enabled");
+  </script>
+
+</body>
+</html>
