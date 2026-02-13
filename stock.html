@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -723,8 +722,12 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
     const USER_ROLE = localStorage.getItem("stock_user_role") || "viewer";
     const USER_NAME = localStorage.getItem("stock_user_name") || "User";
 
+    console.log("🔐 Login Check:", USER_EMAIL, "Role:", USER_ROLE);
+
     window.isAdminUser = function() {
-      return USER_ROLE === "admin";
+      const isAdmin = USER_ROLE === "admin";
+      console.log("👤 isAdminUser check:", isAdmin);
+      return isAdmin;
     };
 
     window.addEventListener("DOMContentLoaded", function() {
@@ -737,6 +740,7 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
         const roleColor = USER_ROLE === "admin" ? "#4caf50" : "#ff9800";
         userInfo.innerHTML = roleIcon + ' <span style="color:' + roleColor + '; font-weight:600;">' + roleText + '</span> | ' + USER_NAME + ' (' + USER_EMAIL + ')';
         header.appendChild(userInfo);
+        console.log("✅ User info displayed in header");
       }
 
       if (USER_ROLE === "viewer") {
@@ -744,6 +748,7 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
         const btnImport = document.getElementById("btnImport");
         if (importFile) importFile.style.display = "none";
         if (btnImport) btnImport.style.display = "none";
+        console.log("👁️ Viewer mode - import hidden");
       }
 
       const controls = document.querySelector(".controls");
@@ -759,11 +764,12 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
           }
         };
         controls.appendChild(logoutBtn);
+        console.log("✅ Logout button added");
       }
     });
   </script>
 
-  <!-- Firebase with Independent Table Builder -->
+  <!-- Firebase with EXTREME Debug Logging -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, doc, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -787,15 +793,23 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
 
     console.log("🔥 Firebase initialized");
 
-    // INDEPENDENT TABLE BUILDER - Bypass existing functions
+    // EXTREME DEBUG TABLE BUILDER
     function rebuildTableDirectly(data) {
-      console.log("🔨 Building table directly with", data.length, "items");
+      console.log("╔═══════════════════════════════════════════════════════╗");
+      console.log("║       🔨 REBUILD TABLE DIRECTLY CALLED               ║");
+      console.log("╚═══════════════════════════════════════════════════════╝");
+      console.log("📊 Data length:", data.length);
+      console.log("📊 Data sample:", data.slice(0, 2));
 
       const tbody = document.getElementById("stockBody");
+      console.log("🎯 tbody element:", tbody);
+
       if (!tbody) {
-        console.error("❌ tbody not found");
+        console.error("❌❌❌ CRITICAL: tbody not found!");
         return;
       }
+
+      console.log("✅ tbody found, current rows:", tbody.children.length);
 
       // Get current search and filter
       const searchInput = document.getElementById("searchInput");
@@ -803,6 +817,9 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
 
       const searchTerm = searchInput ? searchInput.value.toLowerCase() : "";
       const selectedCategory = categoryFilter ? categoryFilter.value : "";
+
+      console.log("🔍 Search term:", searchTerm || "(none)");
+      console.log("🏷️ Category filter:", selectedCategory || "(none)");
 
       // Filter data
       let filteredData = data;
@@ -813,18 +830,21 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
           (item.desc && item.desc.toLowerCase().includes(searchTerm)) ||
           (item.category && item.category.toLowerCase().includes(searchTerm))
         );
+        console.log("🔍 After search filter:", filteredData.length, "items");
       }
 
       if (selectedCategory && selectedCategory !== "") {
         filteredData = filteredData.filter(item => 
           item.category === selectedCategory
         );
+        console.log("🏷️ After category filter:", filteredData.length, "items");
       }
 
-      console.log("📋 Filtered to", filteredData.length, "items");
+      console.log("📋 Final filtered count:", filteredData.length);
 
       // Build table HTML
       let html = "";
+      let rowCount = 0;
 
       filteredData.forEach(item => {
         const qty = item.qty || 0;
@@ -842,95 +862,168 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
 
         const isAdmin = window.isAdminUser && window.isAdminUser();
         const actionButtons = isAdmin ? 
-          `<button onclick="updateStock('${item.code}','IN')" class="btn" style="background:#4caf50;padding:8px 15px;font-size:12px;margin-right:5px">IN</button>
-           <button onclick="updateStock('${item.code}','OUT')" class="btn" style="background:#f44336;padding:8px 15px;font-size:12px;margin-right:5px">OUT</button>
-           <button onclick="editReady('${item.code}')" class="btn" style="background:#ff9800;padding:8px 15px;font-size:12px">Ready</button>` :
-          `<span style="color:#777;font-size:12px">View only</span>`;
+          '<button onclick="updateStock('' + item.code + '','IN')" class="btn" style="background:#4caf50;padding:8px 15px;font-size:12px;margin-right:5px">IN</button>' +
+          '<button onclick="updateStock('' + item.code + '','OUT')" class="btn" style="background:#f44336;padding:8px 15px;font-size:12px;margin-right:5px">OUT</button>' +
+          '<button onclick="editReady('' + item.code + '')" class="btn" style="background:#ff9800;padding:8px 15px;font-size:12px">Ready</button>' :
+          '<span style="color:#777;font-size:12px">View only</span>';
 
-        html += `
-          <tr class="${rowClass}">
-            <td><strong>${item.category || ""}</strong></td>
-            <td><strong>${item.code || ""}</strong></td>
-            <td>${item.desc || item.code || ""}</td>
-            <td><strong style="font-size:1.2em;color:${qtyColor}">${qty}</strong></td>
-            <td>${item.status || ""}</td>
-            <td>${actionButtons}</td>
-          </tr>
-        `;
+        html += '<tr class="' + rowClass + '">' +
+          '<td><strong>' + (item.category || "") + '</strong></td>' +
+          '<td><strong>' + (item.code || "") + '</strong></td>' +
+          '<td>' + (item.desc || item.code || "") + '</td>' +
+          '<td><strong style="font-size:1.2em;color:' + qtyColor + '">' + qty + '</strong></td>' +
+          '<td>' + (item.status || "") + '</td>' +
+          '<td>' + actionButtons + '</td>' +
+          '</tr>';
+
+        rowCount++;
       });
 
       if (filteredData.length === 0) {
         html = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#999">No items found</td></tr>';
       }
 
+      console.log("📝 Generated HTML length:", html.length, "characters");
+      console.log("📝 Generated rows:", rowCount);
+
+      console.log("🎨 Setting innerHTML...");
       tbody.innerHTML = html;
-      console.log("✅ Table rebuilt with", filteredData.length, "rows");
+      console.log("✅✅✅ innerHTML SET! New row count:", tbody.children.length);
 
       // Hide/show no results message
       const noResults = document.getElementById("noResults");
       if (noResults) {
         noResults.style.display = filteredData.length === 0 ? "block" : "none";
       }
+
+      console.log("╔═══════════════════════════════════════════════════════╗");
+      console.log("║       ✅ TABLE REBUILD COMPLETE                       ║");
+      console.log("╚═══════════════════════════════════════════════════════╝");
     }
 
-    // INDEPENDENT STATS UPDATER
+    // EXTREME DEBUG STATS UPDATER
     function updateStatsDirectly(data) {
+      console.log("📊 Updating stats...");
+
       const total = data.length;
       const low = data.filter(x => x.qty > 0 && x.qty <= 5).length;
       const zero = data.filter(x => x.qty === 0).length;
+
+      console.log("📊 Calculated - Total:", total, "Low:", low, "Zero:", zero);
 
       const totalEl = document.getElementById("totalItems");
       const lowEl = document.getElementById("lowStock");
       const zeroEl = document.getElementById("zeroStock");
 
-      if (totalEl) totalEl.textContent = total;
-      if (lowEl) lowEl.textContent = low;
-      if (zeroEl) zeroEl.textContent = zero;
+      console.log("📊 Elements - Total:", totalEl, "Low:", lowEl, "Zero:", zeroEl);
 
-      console.log("📊 Stats: Total=" + total + " Low=" + low + " Zero=" + zero);
+      if (totalEl) {
+        totalEl.textContent = total;
+        console.log("✅ Total set to:", total);
+      }
+      if (lowEl) {
+        lowEl.textContent = low;
+        console.log("✅ Low set to:", low);
+      }
+      if (zeroEl) {
+        zeroEl.textContent = zero;
+        console.log("✅ Zero set to:", zero);
+      }
+
+      console.log("✅ Stats update complete");
     }
 
     // Complete UI refresh
     function refreshUIComplete() {
-      if (!window.stockData || !Array.isArray(window.stockData)) {
-        console.warn("⚠️ No stockData");
+      console.log("
+");
+      console.log("╔══════════════════════════════════════════════════════════╗");
+      console.log("║       🔄 COMPLETE UI REFRESH STARTING                   ║");
+      console.log("╚══════════════════════════════════════════════════════════╝");
+
+      if (!window.stockData) {
+        console.error("❌❌❌ CRITICAL: window.stockData is undefined!");
         return;
       }
 
-      console.log("🔄 Complete UI refresh starting...");
+      if (!Array.isArray(window.stockData)) {
+        console.error("❌❌❌ CRITICAL: window.stockData is not an array!");
+        console.log("Type:", typeof window.stockData);
+        console.log("Value:", window.stockData);
+        return;
+      }
+
+      console.log("✅ window.stockData exists, length:", window.stockData.length);
 
       updateStatsDirectly(window.stockData);
       rebuildTableDirectly(window.stockData);
 
-      console.log("✅ UI refresh complete");
+      console.log("╔══════════════════════════════════════════════════════════╗");
+      console.log("║       ✅ COMPLETE UI REFRESH FINISHED                    ║");
+      console.log("╚══════════════════════════════════════════════════════════╝");
+      console.log("
+");
     }
 
     // Hook functions after page load
     window.addEventListener('load', function() {
       setTimeout(() => {
-        console.log("🔌 Hooking functions...");
+        console.log("
+");
+        console.log("╔══════════════════════════════════════════════════════════╗");
+        console.log("║       🔌 HOOKING EXISTING FUNCTIONS                     ║");
+        console.log("╚══════════════════════════════════════════════════════════╝");
 
+        // Hook updateStock
         if (typeof window.updateStock === "function") {
-          const orig = window.updateStock;
+          const origUpdate = window.updateStock;
           window.updateStock = function(code, type) {
-            console.log("📝 updateStock:", code, type);
-            orig(code, type);
+            console.log("
+");
+            console.log("╔══════════════════════════════════════════════════════════╗");
+            console.log("║       📝 UPDATE STOCK CALLED                             ║");
+            console.log("╚══════════════════════════════════════════════════════════╝");
+            console.log("📦 Code:", code);
+            console.log("📦 Type:", type);
+            console.log("👤 User role:", localStorage.getItem("stock_user_role"));
+            console.log("👤 Is Admin:", window.isAdminUser());
 
+            console.log("⚙️ Calling original updateStock...");
+            origUpdate(code, type);
+            console.log("✅ Original updateStock completed");
+
+            console.log("⏱️ Waiting 200ms before refresh...");
             setTimeout(() => {
+              console.log("🔄 Triggering UI refresh...");
               refreshUIComplete();
+
+              console.log("💾 Checking if should save...");
               if (window.isAdminUser && window.isAdminUser()) {
+                console.log("✅ Admin confirmed, calling saveStockToCloud...");
                 window.saveStockToCloud();
+              } else {
+                console.log("❌ Not admin, skipping save");
               }
             }, 200);
           };
-          console.log("✅ updateStock hooked");
+          console.log("✅ updateStock hooked successfully");
+        } else {
+          console.warn("⚠️ window.updateStock not found!");
         }
 
+        // Hook editReady
         if (typeof window.editReady === "function") {
-          const orig = window.editReady;
+          const origEdit = window.editReady;
           window.editReady = function(code) {
-            console.log("📝 editReady:", code);
-            orig(code);
+            console.log("
+");
+            console.log("╔══════════════════════════════════════════════════════════╗");
+            console.log("║       📝 EDIT READY CALLED                               ║");
+            console.log("╚══════════════════════════════════════════════════════════╝");
+            console.log("📦 Code:", code);
+
+            origEdit(code);
+            console.log("✅ Original editReady completed");
 
             setTimeout(() => {
               refreshUIComplete();
@@ -939,14 +1032,22 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
               }
             }, 200);
           };
-          console.log("✅ editReady hooked");
+          console.log("✅ editReady hooked successfully");
+        } else {
+          console.warn("⚠️ window.editReady not found!");
         }
 
+        // Hook importData
         if (typeof window.importData === "function") {
-          const orig = window.importData;
+          const origImport = window.importData;
           window.importData = function() {
-            console.log("📝 importData");
-            orig();
+            console.log("
+");
+            console.log("╔══════════════════════════════════════════════════════════╗");
+            console.log("║       📥 IMPORT DATA CALLED                              ║");
+            console.log("╚══════════════════════════════════════════════════════════╝");
+
+            origImport();
 
             setTimeout(() => {
               refreshUIComplete();
@@ -955,73 +1056,134 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
               }
             }, 500);
           };
-          console.log("✅ importData hooked");
+          console.log("✅ importData hooked successfully");
+        } else {
+          console.warn("⚠️ window.importData not found!");
         }
 
         // Hook search and filter
         const searchInput = document.getElementById("searchInput");
         if (searchInput) {
           searchInput.addEventListener("input", () => {
+            console.log("🔍 Search input changed");
             rebuildTableDirectly(window.stockData);
           });
+          console.log("✅ Search input hooked");
         }
 
         const catFilter = document.getElementById("categoryFilter");
         if (catFilter) {
           catFilter.addEventListener("change", () => {
+            console.log("🏷️ Category filter changed");
             rebuildTableDirectly(window.stockData);
           });
+          console.log("✅ Category filter hooked");
         }
+
+        console.log("╔══════════════════════════════════════════════════════════╗");
+        console.log("║       ✅ ALL HOOKS COMPLETE                              ║");
+        console.log("╚══════════════════════════════════════════════════════════╝");
+        console.log("
+");
 
       }, 500);
     });
 
-    // Real-time listener
+    // Real-time listener with EXTREME debugging
     onSnapshot(stockRef, { includeMetadataChanges: true }, (snapshot) => {
+      console.log("
+");
+      console.log("╔══════════════════════════════════════════════════════════╗");
+      console.log("║       🔄 SNAPSHOT RECEIVED FROM FIREBASE                 ║");
+      console.log("╚══════════════════════════════════════════════════════════╝");
+      console.log("📡 Metadata - fromCache:", snapshot.metadata.fromCache);
+      console.log("📡 Metadata - hasPendingWrites:", snapshot.metadata.hasPendingWrites);
+
       if (snapshot.metadata.fromCache && !snapshot.metadata.hasPendingWrites) {
+        console.log("⏭️ Skipping - cache snapshot");
         return;
       }
 
-      console.log("🔄 Snapshot from Firebase");
-
       const data = snapshot.data();
+      console.log("📦 Snapshot data:", data ? "exists" : "null");
+
       if (data && Array.isArray(data.items)) {
+        console.log("✅ Data valid, items count:", data.items.length);
+        console.log("📦 First item sample:", data.items[0]);
+
         isSyncing = true;
+        console.log("🔒 isSyncing = true");
 
-        console.log("✅ Received:", data.items.length, "items");
-
+        console.log("💾 Setting window.stockData...");
         window.stockData = data.items;
         window.currentData = window.stockData;
+        console.log("✅ window.stockData set, length:", window.stockData.length);
 
         try {
           localStorage.setItem("stockData", JSON.stringify(window.stockData));
-        } catch(e) {}
+          console.log("✅ Saved to localStorage");
+        } catch(e) {
+          console.error("❌ localStorage save failed:", e);
+        }
 
-        // Complete UI refresh
+        console.log("⏱️ Waiting 100ms before UI refresh...");
         setTimeout(() => {
+          console.log("🔄 Triggering complete UI refresh...");
           refreshUIComplete();
         }, 100);
 
         showSync("✓ Synced (" + data.items.length + ")", "ok");
 
-        setTimeout(() => { isSyncing = false; }, 300);
+        setTimeout(() => { 
+          isSyncing = false;
+          console.log("🔓 isSyncing = false");
+        }, 300);
+      } else {
+        console.error("❌ Invalid data structure!");
+        console.log("Data:", data);
       }
+
+      console.log("
+");
     }, (err) => {
-      console.error("❌ Error:", err);
+      console.error("❌❌❌ FIREBASE ERROR:", err);
       showSync("✗ Error", "bad");
     });
 
-    // Save function
+    // Save function with EXTREME debugging
     window.saveStockToCloud = async function() {
-      if (localStorage.getItem("stock_user_role") !== "admin") return;
-      if (isSyncing) return;
+      console.log("
+");
+      console.log("╔══════════════════════════════════════════════════════════╗");
+      console.log("║       💾 SAVE STOCK TO CLOUD CALLED                     ║");
+      console.log("╚══════════════════════════════════════════════════════════╝");
 
-      if (saveTimeout) clearTimeout(saveTimeout);
+      const userRole = localStorage.getItem("stock_user_role");
+      console.log("👤 User role:", userRole);
 
+      if (userRole !== "admin") {
+        console.log("❌ Not admin - skipping save");
+        return;
+      }
+
+      console.log("✅ Admin confirmed");
+
+      if (isSyncing) {
+        console.log("⏭️ Currently syncing - skipping save");
+        return;
+      }
+
+      if (saveTimeout) {
+        console.log("⏱️ Clearing previous save timeout");
+        clearTimeout(saveTimeout);
+      }
+
+      console.log("⏱️ Setting 300ms timeout...");
       saveTimeout = setTimeout(async () => {
         try {
           showSync("⟳ Saving...", "info");
-          console.log("💾 Saving...");
+          console.log("💾 Starting save operation...");
+          console.log("📦 Data to save - items count:", window.stockData.length);
 
           await setDoc(stockRef, {
             items: window.stockData,
@@ -1030,9 +1192,11 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
           }, { merge: true });
 
           showSync("✓ Saved", "ok");
-          console.log("✅ Saved");
+          console.log("✅✅✅ SAVE SUCCESSFUL!");
+          console.log("📧 Saved by:", localStorage.getItem("stock_user_email"));
         } catch (e) {
-          console.error("❌ Save error:", e);
+          console.error("❌❌❌ SAVE ERROR:", e);
+          console.error("Error details:", e.message, e.stack);
           showSync("✗ Failed", "bad");
         }
       }, 300);
@@ -1064,7 +1228,7 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
       }, 2000);
     }
 
-    console.log("🔥 Firebase with Independent Builder Ready!");
+    console.log("🔥 Firebase with EXTREME Debug Logging Ready!");
   </script>
 
 </body>
