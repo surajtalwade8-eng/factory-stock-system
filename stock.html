@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -775,15 +774,15 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, doc, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // Firebase Configuration (Your existing config)
+    // NEW Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyAVD3g47FgDP_ZG-okPWsoV9uUNh+Lm6ww",
-  authDomain: "factory-41267.firebaseapp.com",
-  projectId: "factory-41267",
-  storageBucket: "factory-41267.firebasestorage.app",
-  messagingSenderId: "495748791514",
-  appId: "1:495748791514:web:67d73d96e4a0f6284df9e3",
-  measurementId: "G-8X6NY8TE94"
+      authDomain: "factory-41267.firebaseapp.com",
+      projectId: "factory-41267",
+      storageBucket: "factory-41267.firebasestorage.app",
+      messagingSenderId: "495748791514",
+      appId: "1:495748791514:web:67d73d96e4a0f6284df9e3",
+      measurementId: "G-8X6NY8TE94"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -792,14 +791,23 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
 
     let isSyncing = false;
 
+    console.log("🔥 Firebase initialized - Project: factory-41267");
+
     // Real-time listener - Auto-update when data changes
     onSnapshot(stockRef, { includeMetadataChanges: true }, (snapshot) => {
       // Ignore cache updates, only process server updates
-      if (snapshot.metadata.fromCache) return;
+      if (snapshot.metadata.fromCache) {
+        console.log("📦 Loading from cache...");
+        return;
+      }
+
+      console.log("🔄 Snapshot received from server");
 
       const data = snapshot.data();
       if (data && Array.isArray(data.items)) {
         isSyncing = true;
+
+        console.log("✅ Data loaded:", data.items.length, "items");
 
         // Update global stockData
         window.stockData = data.items;
@@ -808,7 +816,9 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
         // Save to localStorage
         try {
           localStorage.setItem("stockData", JSON.stringify(window.stockData));
-        } catch(e) {}
+        } catch(e) {
+          console.error("LocalStorage save error:", e);
+        }
 
         // Refresh UI
         if (typeof window.rebuildCategoryOptions === "function") {
@@ -819,12 +829,15 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
         }
 
         // Show sync indicator
-        showSyncStatus("✓ Synced with cloud", "success");
+        showSyncStatus("✓ Synced with cloud (" + data.items.length + " items)", "success");
 
         setTimeout(() => { isSyncing = false; }, 500);
+      } else {
+        console.warn("⚠️ No items array in document");
+        showSyncStatus("⚠ No data found in cloud", "error");
       }
     }, (error) => {
-      console.error("Firebase sync error:", error);
+      console.error("❌ Firebase sync error:", error);
       showSyncStatus("⚠ Sync error - Using local data", "error");
     });
 
@@ -832,14 +845,18 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
     window.saveStockToCloud = async function() {
       const userRole = localStorage.getItem("stock_user_role");
       if (userRole !== "admin") {
-        console.log("Viewer users cannot save to cloud");
+        console.log("❌ Viewer users cannot save to cloud");
         return;
       }
 
-      if (isSyncing) return; // Prevent loop
+      if (isSyncing) {
+        console.log("⏳ Already syncing, skip save");
+        return;
+      }
 
       try {
         showSyncStatus("⟳ Saving to cloud...", "info");
+        console.log("💾 Saving", window.stockData.length, "items to cloud");
 
         await setDoc(stockRef, {
           items: window.stockData,
@@ -848,9 +865,10 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
         }, { merge: true });
 
         showSyncStatus("✓ Saved to cloud", "success");
+        console.log("✅ Save successful");
       } catch (error) {
-        console.error("Save error:", error);
-        showSyncStatus("✗ Save failed", "error");
+        console.error("❌ Save error:", error);
+        showSyncStatus("✗ Save failed: " + error.message, "error");
       }
     };
 
@@ -875,7 +893,11 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
       indicator.style.display = "block";
 
       setTimeout(() => {
-        indicator.style.display = "none";
+        indicator.style.opacity = "0";
+        setTimeout(() => {
+          indicator.style.display = "none";
+          indicator.style.opacity = "1";
+        }, 300);
       }, 3000);
     }
 
@@ -905,7 +927,7 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
       };
     }
 
-    console.log("🔥 Firebase Real-Time Sync Enabled");
+    console.log("🔥 Firebase Real-Time Sync Enabled - Ready!");
   </script>
 
 </body>
