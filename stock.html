@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -45,63 +46,6 @@
     </style>
 </head>
 <body>
-  <!-- Login Protection & Role-Based Access Control -->
-  <script>
-    // Redirect to login if not authenticated
-    if (localStorage.getItem("stock_login_ok") !== "1") {
-      window.location.href = "login.html";
-    }
-
-    // Get user role and info
-    const USER_EMAIL = localStorage.getItem("stock_user_email") || "";
-    const USER_ROLE = localStorage.getItem("stock_user_role") || "viewer";
-    const USER_NAME = localStorage.getItem("stock_user_name") || "User";
-
-    // Check if user is admin
-    window.isAdminUser = function() {
-      return USER_ROLE === "admin";
-    };
-
-    // UI Setup
-    window.addEventListener("DOMContentLoaded", function() {
-      // User info in header
-      const header = document.querySelector(".header");
-      if (header) {
-        const userInfo = document.createElement("div");
-        userInfo.style.cssText = "font-size:14px; opacity:0.9; margin-top:8px;";
-        const roleIcon = USER_ROLE === "admin" ? "👨‍💼" : "👁️";
-        const roleText = USER_ROLE === "admin" ? "Admin" : "Viewer";
-        const roleColor = USER_ROLE === "admin" ? "#4caf50" : "#ff9800";
-        userInfo.innerHTML = roleIcon + ' <span style="color:' + roleColor + '; font-weight:600;">' + roleText + '</span> | ' + USER_NAME + ' (' + USER_EMAIL + ')';
-        header.appendChild(userInfo);
-      }
-
-      // Hide Import for viewers
-      if (USER_ROLE === "viewer") {
-        const importFile = document.getElementById("importFile");
-        const btnImport = document.getElementById("btnImport");
-        if (importFile) importFile.style.display = "none";
-        if (btnImport) btnImport.style.display = "none";
-      }
-
-      // Add logout button
-      const controls = document.querySelector(".controls");
-      if (controls) {
-        const logoutBtn = document.createElement("button");
-        logoutBtn.className = "btn";
-        logoutBtn.style.cssText = "background:#f44336; margin-left:10px;";
-        logoutBtn.textContent = "Logout";
-        logoutBtn.onclick = function() {
-          if (confirm("Are you sure you want to logout?")) {
-            localStorage.clear();
-            window.location.href = "login.html";
-          }
-        };
-        controls.appendChild(logoutBtn);
-      }
-    });
-  </script>
-
     <div class="container">
         <div class="header">
             <h1>🏭 Factory Stock System</h1>
@@ -121,10 +65,10 @@
                 <option value="ALL PART">Spare Parts</option>
             </select>
             <input type="file" id="importFile" accept=".json,.csv,.txt" class="category-select" style="width:300px" />
-
-
-
-
+<input id="loginEmail" class="category-select" style="width:220px" placeholder="Email">
+<input id="loginPass"  class="category-select" style="width:180px" type="password" placeholder="Password">
+<button id="btnLogin" class="btn" onclick="doLogin()">Login</button>
+<button id="btnLogout" class="btn" onclick="doLogout()" style="display:none;">Logout</button>
 
 <button id="btnImport" onclick="importData()" class="btn" style="background:#6a1b9a;">Import</button>
             <button onclick="exportData()" class="btn" style="background:#546e7a;">Export CSV</button>
@@ -769,12 +713,62 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
 </script>
 
 
-  <!-- Firebase Real-Time Sync -->
+  <!-- Login Protection & Role-Based Access -->
+  <script>
+    // Redirect if not logged in
+    if (localStorage.getItem("stock_login_ok") !== "1") {
+      window.location.href = "index.html";
+    }
+
+    const USER_EMAIL = localStorage.getItem("stock_user_email") || "";
+    const USER_ROLE = localStorage.getItem("stock_user_role") || "viewer";
+    const USER_NAME = localStorage.getItem("stock_user_name") || "User";
+
+    window.isAdminUser = function() {
+      return USER_ROLE === "admin";
+    };
+
+    window.addEventListener("DOMContentLoaded", function() {
+      const header = document.querySelector(".header");
+      if (header) {
+        const userInfo = document.createElement("div");
+        userInfo.style.cssText = "font-size:14px; opacity:0.9; margin-top:8px;";
+        const roleIcon = USER_ROLE === "admin" ? "👨‍💼" : "👁️";
+        const roleText = USER_ROLE === "admin" ? "Admin" : "Viewer";
+        const roleColor = USER_ROLE === "admin" ? "#4caf50" : "#ff9800";
+        userInfo.innerHTML = roleIcon + ' <span style="color:' + roleColor + '; font-weight:600;">' + roleText + '</span> | ' + USER_NAME + ' (' + USER_EMAIL + ')';
+        header.appendChild(userInfo);
+      }
+
+      if (USER_ROLE === "viewer") {
+        const importFile = document.getElementById("importFile");
+        const btnImport = document.getElementById("btnImport");
+        if (importFile) importFile.style.display = "none";
+        if (btnImport) btnImport.style.display = "none";
+      }
+
+      const controls = document.querySelector(".controls");
+      if (controls) {
+        const logoutBtn = document.createElement("button");
+        logoutBtn.className = "btn";
+        logoutBtn.style.cssText = "background:#f44336; margin-left:10px;";
+        logoutBtn.textContent = "Logout";
+        logoutBtn.onclick = function() {
+          if (confirm("Logout?")) {
+            localStorage.clear();
+            window.location.href = "index.html";
+          }
+        };
+        controls.appendChild(logoutBtn);
+      }
+    });
+  </script>
+
+  <!-- Enhanced Firebase Real-Time Sync -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, doc, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // NEW Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyAVD3g47FgDP_ZG-okPWsoV9uUNh+Lm6ww",
       authDomain: "factory-41267.firebaseapp.com",
@@ -790,144 +784,162 @@ try { if (!localStorage.getItem('stockData')) { localStorage.setItem('stockData'
     const stockRef = doc(db, "app", "stock");
 
     let isSyncing = false;
+    let saveTimeout = null;
 
-    console.log("🔥 Firebase initialized - Project: factory-41267");
+    console.log("🔥 Firebase initialized");
 
-    // Real-time listener - Auto-update when data changes
+    // Real-time listener - AUTO-UPDATE for all users
     onSnapshot(stockRef, { includeMetadataChanges: true }, (snapshot) => {
-      // Ignore cache updates, only process server updates
-      if (snapshot.metadata.fromCache) {
-        console.log("📦 Loading from cache...");
+      if (snapshot.metadata.fromCache && !snapshot.metadata.hasPendingWrites) {
         return;
       }
 
-      console.log("🔄 Snapshot received from server");
+      const source = snapshot.metadata.hasPendingWrites ? "Local" : "Server";
+      console.log("🔄 Update from:", source);
 
       const data = snapshot.data();
       if (data && Array.isArray(data.items)) {
         isSyncing = true;
 
-        console.log("✅ Data loaded:", data.items.length, "items");
+        console.log("✅ Loaded:", data.items.length, "items");
 
-        // Update global stockData
         window.stockData = data.items;
         window.currentData = window.stockData;
 
-        // Save to localStorage
         try {
           localStorage.setItem("stockData", JSON.stringify(window.stockData));
-        } catch(e) {
-          console.error("LocalStorage save error:", e);
-        }
+        } catch(e) {}
 
-        // Refresh UI
+        // Rebuild UI
         if (typeof window.rebuildCategoryOptions === "function") {
           window.rebuildCategoryOptions();
         }
+
         if (typeof window.filterStock === "function") {
           window.filterStock();
         }
 
-        // Show sync indicator
-        showSyncStatus("✓ Synced with cloud (" + data.items.length + " items)", "success");
+        // FORCE STATS UPDATE
+        updateStats();
 
-        setTimeout(() => { isSyncing = false; }, 500);
-      } else {
-        console.warn("⚠️ No items array in document");
-        showSyncStatus("⚠ No data found in cloud", "error");
+        showSync("✓ Synced (" + data.items.length + ")", "ok");
+
+        setTimeout(() => { isSyncing = false; }, 300);
       }
-    }, (error) => {
-      console.error("❌ Firebase sync error:", error);
-      showSyncStatus("⚠ Sync error - Using local data", "error");
+    }, (err) => {
+      console.error("❌ Sync error:", err);
+      showSync("✗ Error", "bad");
     });
 
-    // Save to cloud (only for admin users)
+    // STATS UPDATE FUNCTION
+    function updateStats() {
+      if (!window.stockData) return;
+
+      const total = window.stockData.length;
+      const low = window.stockData.filter(x => x.qty > 0 && x.qty <= 5).length;
+      const zero = window.stockData.filter(x => x.qty === 0).length;
+
+      const t = document.getElementById("totalItems");
+      const l = document.getElementById("lowStock");
+      const z = document.getElementById("zeroStock");
+
+      if (t) t.textContent = total;
+      if (l) l.textContent = low;
+      if (z) z.textContent = zero;
+
+      console.log("📊 Stats: Total=" + total + " Low=" + low + " Zero=" + zero);
+    }
+
+    // Save function (admin only)
     window.saveStockToCloud = async function() {
-      const userRole = localStorage.getItem("stock_user_role");
-      if (userRole !== "admin") {
-        console.log("❌ Viewer users cannot save to cloud");
-        return;
-      }
+      if (localStorage.getItem("stock_user_role") !== "admin") return;
+      if (isSyncing) return;
 
-      if (isSyncing) {
-        console.log("⏳ Already syncing, skip save");
-        return;
-      }
+      if (saveTimeout) clearTimeout(saveTimeout);
 
-      try {
-        showSyncStatus("⟳ Saving to cloud...", "info");
-        console.log("💾 Saving", window.stockData.length, "items to cloud");
+      saveTimeout = setTimeout(async () => {
+        try {
+          showSync("⟳ Saving...", "info");
 
-        await setDoc(stockRef, {
-          items: window.stockData,
-          updatedAt: serverTimestamp(),
-          updatedBy: localStorage.getItem("stock_user_email") || "Unknown"
-        }, { merge: true });
+          await setDoc(stockRef, {
+            items: window.stockData,
+            updatedAt: serverTimestamp(),
+            by: localStorage.getItem("stock_user_email")
+          }, { merge: true });
 
-        showSyncStatus("✓ Saved to cloud", "success");
-        console.log("✅ Save successful");
-      } catch (error) {
-        console.error("❌ Save error:", error);
-        showSyncStatus("✗ Save failed: " + error.message, "error");
-      }
+          showSync("✓ Saved", "ok");
+        } catch (e) {
+          showSync("✗ Failed", "bad");
+        }
+      }, 200);
     };
 
-    // Sync status indicator
-    function showSyncStatus(message, type) {
-      let indicator = document.getElementById("syncIndicator");
-      if (!indicator) {
-        indicator = document.createElement("div");
-        indicator.id = "syncIndicator";
-        indicator.style.cssText = "position:fixed; top:10px; right:10px; padding:10px 15px; border-radius:8px; font-size:13px; z-index:9999; transition:all 0.3s; box-shadow:0 4px 12px rgba(0,0,0,0.15);";
-        document.body.appendChild(indicator);
+    function showSync(msg, type) {
+      let el = document.getElementById("syncIndicator");
+      if (!el) {
+        el = document.createElement("div");
+        el.id = "syncIndicator";
+        el.style.cssText = "position:fixed;top:10px;right:10px;padding:10px 15px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:opacity 0.3s;";
+        document.body.appendChild(el);
       }
 
       const colors = {
-        success: "background:#4caf50; color:white;",
-        error: "background:#f44336; color:white;",
-        info: "background:#2196f3; color:white;"
+        ok: "background:#4caf50;color:white;",
+        bad: "background:#f44336;color:white;",
+        info: "background:#2196f3;color:white;"
       };
 
-      indicator.style.cssText += colors[type] || colors.info;
-      indicator.textContent = message;
-      indicator.style.display = "block";
+      el.style.cssText += colors[type] || colors.info;
+      el.textContent = msg;
+      el.style.display = "block";
+      el.style.opacity = "1";
 
       setTimeout(() => {
-        indicator.style.opacity = "0";
-        setTimeout(() => {
-          indicator.style.display = "none";
-          indicator.style.opacity = "1";
-        }, 300);
-      }, 3000);
+        el.style.opacity = "0";
+        setTimeout(() => el.style.display = "none", 300);
+      }, 2000);
     }
 
-    // Hook into existing update functions to auto-save
-    const originalUpdateStock = window.updateStock;
-    if (typeof originalUpdateStock === "function") {
+    // Hook updateStock
+    const orig = window.updateStock;
+    if (orig) {
       window.updateStock = function() {
-        originalUpdateStock.apply(this, arguments);
+        orig.apply(this, arguments);
         setTimeout(() => {
-          if (window.isAdminUser && typeof window.isAdminUser === "function" && window.isAdminUser()) {
+          if (window.isAdminUser && window.isAdminUser()) {
             window.saveStockToCloud();
           }
-        }, 300);
+        }, 150);
       };
     }
 
-    // Hook into importData
-    const originalImportData = window.importData;
-    if (typeof originalImportData === "function") {
+    // Hook editReady
+    const origReady = window.editReady;
+    if (origReady) {
+      window.editReady = function() {
+        origReady.apply(this, arguments);
+        setTimeout(() => {
+          if (window.isAdminUser && window.isAdminUser()) {
+            window.saveStockToCloud();
+          }
+        }, 150);
+      };
+    }
+
+    // Hook importData
+    const origImport = window.importData;
+    if (origImport) {
       window.importData = function() {
-        originalImportData.apply(this, arguments);
+        origImport.apply(this, arguments);
         setTimeout(() => {
-          if (window.isAdminUser && typeof window.isAdminUser === "function" && window.isAdminUser()) {
+          if (window.isAdminUser && window.isAdminUser()) {
             window.saveStockToCloud();
           }
-        }, 500);
+        }, 400);
       };
     }
 
-    console.log("🔥 Firebase Real-Time Sync Enabled - Ready!");
+    console.log("🔥 Real-Time Sync Active!");
   </script>
 
 </body>
